@@ -1,0 +1,85 @@
+# This is a prototype Makefile. Modify it according to your needs.
+# You should at least check the settings for
+# DEVICE ....... The AVR device you compile for
+# CLOCK ........ Target AVR clock rate in Hertz
+# OBJECTS ...... The object files created from your source files. This list is
+#                usually the same as the list of source files with suffix ".o".
+# PROGRAMMER ... Options to avrdude which define the hardware you use for
+#                uploading to the AVR and the interface where this hardware
+#                is connected.
+# FUSES ........ Parameters for avrdude to flash the fuses appropriately.
+
+DEVICE     = atmega328p
+CLOCK      = 16000000
+PROGRAMMER = -c stk500v1 -b57600 -P/dev/ttyUSB0
+FUSES      = -U hfuse:w:0xd9:m -U lfuse:w:0x24:m
+SRCS       = main.c lib/spi.c lib/w5100.c lib/uart.c lib/socket.c lib/udp.c lib/dhcp.c lib/util.c lib/timer.c
+HDRS       = lib/spi.h lib/w5100.h lib/uart.h lib/socket.h lib/udp.h lib/dhcp.h lib/util.h lib/timer.h
+
+MAIN=main
+OBJDIR=obj
+BINDIR=bin
+DEPDIR=dep
+
+INCLUDE=lib
+
+PREFIX=avr-
+CC=$(PREFIX)gcc
+AS=$(PREFIX)gcc
+LD=$(PREFIX)gcc
+AVRDUDE=avrdude
+
+cwarnings=-pedantic -wall -wextra -wfloat-equal -wwrite-strings -wpointer-arith -wcast-qual -wcast-align  -wshadow -wredundant-decls -wdouble-promotion -winit-self -wswitch-default -wswitch-enum -wundef -wlogical-op -winline
+# -wconversion
+CFLAGS= $(CWARNINGS) -Werror -std=c99 -Os -DF_CPU=$(CLOCK) -mmcu=$(DEVICE) $(addprefix -I,$(INCLUDE))
+AFLAGS=$(CFLAGS) -x assembler-with-cpp
+LFLAGS=$(CFLAGS)
+AVRFLAGS=$(PROGRAMMER) -p $(DEVICE)
+
+OBJS=$(addprefix $(OBJDIR)/,$(addsuffix .o,$(SRCS)))
+DEPS=$(addprefix $(DEPDIR)/,$(addsuffix .d,$(SRCS)))
+HEX=$(BINDIR)/$(MAIN).hex
+ELF=$(BINDIR)/$(MAIN).elf
+
+# symbolic targets:
+all: $(HEX) $(TAGS)
+
+-include $(DEPS)
+
+$(OBJDIR)/%.c.o: %.c
+	@test -d $(dir $@) || mkdir $(dir $@)
+	$(CC) $(CFLAGS) -c -o $@ $<
+
+	@test -d $(dir $(DEPDIR)/$<.d) || mkdir $(dir $(DEPDIR)/$<.d)
+	$(CC) -MM $(CFLAGS) $< >  $(DEPDIR)/$<.d
+	@mv -f $(DEPDIR)/$<.d $(DEPDIR)/$<.d.tmp
+	@sed -e 's|.*:|$(OBJDIR)/$<.o:|' < $(DEPDIR)/$<.d.tmp > $(DEPDIR)/$<.d
+	@sed -e 's/.*://' -e 's/\\$$//' < $(DEPDIR)/$<.d.tmp | fmt -1 | \
+	sed -e 's/^ *//' -e 's/$$/:/' >> $(DEPDIR)/$<.d
+	@rm -f $(DEPDIR)/$<.d.tmp
+
+$(OBJDIR)/%.S.o: %.S
+	@test -d $(dir $@) || mkdir $(dir $@)
+	$(AS) $(AFLAGS) -c -o $@ $<
+
+# file targets:
+$(ELF): $(OBJS)
+	@test -d $(dir $@) || mkdir $(dir $@)
+	$(LD) $(LFLAGS) -o $@ $^
+
+$(HEX): $(ELF)
+	rm -f main.hex
+	avr-objcopy -j .text -j .data -O ihex $< $@
+
+.PHONY: all flash fuse install clean
+
+flash: $(HEX)
+	$(AVRDUDE) $(AVRFLAGS) -U flash:w:$<:i
+
+fuse:
+	$(AVRDUDE) $(AVRFLAGS) $(FUSES)
+
+install: flash fuse
+
+clean:
+	rm -f $(HEX) $(ELF) $(OBJS) $(DEPS) $(TAGS)
