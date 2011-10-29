@@ -33,6 +33,29 @@ void udp_send(uint8_t sockid, const uint8_t *destip, uint16_t destport, uint16_t
     socket_send(sockid, length, data);
 }
 
+
+uint8_t udp_tx_prepare(uint8_t sockid, const uint8_t *destip, uint16_t destport)
+{
+    uint8_t ret = 0;
+    ret = socket_tx_prepare(sockid);
+    if (ret)
+    {
+        socket_set_dest_ip(sockid, destip);
+        socket_set_dest_port(sockid, destport);
+    }
+    return 0;
+}
+
+void udp_tx_add(uint8_t sockid, uint16_t length, const uint8_t *data)
+{
+    socket_tx_add(sockid, length, data);
+}
+
+void udp_tx_flush(uint8_t sockid)
+{
+    socket_tx_flush(sockid);
+}
+
 int16_t udp_available(uint8_t sockid)
 {
     uint16_t ret = socket_available(sockid);

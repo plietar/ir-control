@@ -50,21 +50,39 @@ int main(void)
     _delay_ms(100);
     printf_P(PSTR("Ready ..\n\r"));
     
-    uint8_t ret = dhcp_get_ip(ip);
+    uint8_t ret = 0;
+    do
+    {
+        ret = dhcp_get_ip(ip);
 
-    if (ret)
-    {
-        w5100_get_ipaddr(ip);
-        w5100_get_gateway(gw);
-        w5100_get_subnet(subnet);
-        printf("Got ip address: %d.%d.%d.%d \n\r", ip[0], ip[1], ip[2], ip[3]);
-        printf("Got gw address: %d.%d.%d.%d \n\r", gw[0], gw[1], gw[2], gw[3]);
-        printf("Got sn address: %d.%d.%d.%d \n\r", subnet[0], subnet[1], subnet[2], subnet[3]);
+        if(!ret)
+        {
+            printf("DHCP failed!\n\r");
+            _delay_ms(1000);
+        }
     }
-    else
+    while(!ret);
+
+    w5100_get_ipaddr(ip);
+    w5100_get_gateway(gw);
+    w5100_get_subnet(subnet);
+    printf("Got ip address: %d.%d.%d.%d \n\r", ip[0], ip[1], ip[2], ip[3]);
+    printf("Got gw address: %d.%d.%d.%d \n\r", gw[0], gw[1], gw[2], gw[3]);
+    printf("Got sn address: %d.%d.%d.%d \n\r", subnet[0], subnet[1], subnet[2], subnet[3]);
+
+    sockid = udp_open(5000);
+    printf("Socket %u opened\n\r", sockid);
+    udp_tx_prepare(sockid, destip, 5000);
+    printf("Prepared\n\r");
+    for (char c = 'A'; c <= 'Z'; c++)
     {
-        printf("DHCP did not work :(\n\r");
+        udp_tx_add(sockid, 1, &c);
+        printf("Added %c\n\r", c);
     }
+
+    printf("Sending\n\r");
+    udp_tx_flush(sockid);
+    printf("Sent\n\r");
 
 /*
     sockid = udp_open(port);
@@ -88,8 +106,6 @@ int main(void)
     */
     while (1)
     {
-        printf("Time: %d\n\r", timer_secs());
-        _delay_ms(100);
     }
     return 0;
 }
