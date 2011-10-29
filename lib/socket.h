@@ -93,8 +93,8 @@ void socket_ir_clear(uint8_t sockid, uint8_t ir);
 
 uint8_t socket_status(uint8_t sockid);
 
-uint16_t socket_available(uint8_t sockid);
 uint16_t socket_recv(uint8_t sockid, uint16_t maxread, uint8_t *data, uint8_t keep);
+uint16_t socket_available(uint8_t sockid);
 uint16_t socket_rx_offset(uint8_t sockid);
 void socket_rx_inc(uint8_t sockid, uint16_t rd);
 

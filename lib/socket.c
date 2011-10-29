@@ -4,7 +4,7 @@
 
 uint8_t socket_get_type(uint8_t sockid)
 {
-    return w5100_read(W5100_SOCKET(sockid) + W5100_SOCK_MR, NULL) & W5100_SOCK_MR_P_MSK;
+    return w5100_read(W5100_SOCKET(sockid) + W5100_SOCK_MR) & W5100_SOCK_MR_P_MSK;
 }
 
 void socket_set_type(uint8_t sockid, uint8_t type)
@@ -108,12 +108,12 @@ void socket_tx_flush(uint8_t sockid)
 
 uint16_t socket_tx_fsr(uint8_t sockid)
 {
-    return w5100_read16(W5100_SOCKET(sockid) + W5100_SOCK_TX_FSR, NULL);
+    return w5100_read16(W5100_SOCKET(sockid) + W5100_SOCK_TX_FSR);
 }
 
 uint16_t socket_tx_wr(uint8_t sockid)
 {
-    return w5100_read16(W5100_SOCKET(sockid) + W5100_SOCK_TX_WR, NULL) & SOCKET_TX_MASK_S(sockid);
+    return w5100_read16(W5100_SOCKET(sockid) + W5100_SOCK_TX_WR) & SOCKET_TX_MASK_S(sockid);
 }
 
 void socket_tx_set_wr(uint8_t sockid, uint16_t wr)
@@ -123,12 +123,12 @@ void socket_tx_set_wr(uint8_t sockid, uint16_t wr)
 
 uint16_t socket_tx_rd(uint8_t sockid)
 {
-    return w5100_read16(W5100_SOCKET(sockid) + W5100_SOCK_TX_RD, NULL) & SOCKET_TX_MASK_S(sockid);
+    return w5100_read16(W5100_SOCKET(sockid) + W5100_SOCK_TX_RD) & SOCKET_TX_MASK_S(sockid);
 }
 
 uint8_t socket_ir(uint8_t sockid)
 {
-    return w5100_read(W5100_SOCKET(sockid) + W5100_SOCK_IR, NULL);
+    return w5100_read(W5100_SOCKET(sockid) + W5100_SOCK_IR);
 }
 
 void socket_ir_clear(uint8_t sockid, uint8_t ir)
@@ -138,12 +138,12 @@ void socket_ir_clear(uint8_t sockid, uint8_t ir)
 
 uint8_t socket_status(uint8_t sockid)
 {
-    return w5100_read(W5100_SOCKET(sockid) + W5100_SOCK_SR, NULL);
+    return w5100_read(W5100_SOCKET(sockid) + W5100_SOCK_SR);
 }
 
 uint16_t socket_available(uint8_t sockid)
 {
-    return w5100_read16(W5100_SOCKET(sockid) + W5100_SOCK_RX_RSR, NULL);
+    return w5100_read16(W5100_SOCKET(sockid) + W5100_SOCK_RX_RSR);
 }
 
 uint16_t socket_recv(uint8_t sockid, uint16_t maxread, uint8_t *data, uint8_t keep)
@@ -180,7 +180,7 @@ uint16_t socket_recv(uint8_t sockid, uint16_t maxread, uint8_t *data, uint8_t ke
 
 uint16_t socket_rx_offset(uint8_t sockid)
 {
-    return w5100_read16(W5100_SOCKET(sockid) + W5100_SOCK_RX_RD, NULL) & SOCKET_RX_MASK_S(sockid);
+    return w5100_read16(W5100_SOCKET(sockid) + W5100_SOCK_RX_RD) & SOCKET_RX_MASK_S(sockid);
 }
 
 void socket_rx_inc(uint8_t sockid, uint16_t rd)

@@ -72,9 +72,9 @@ void w5100_init();
 
 void w5100_init_no_spi();
 
-uint8_t w5100_read(uint16_t addr, uint8_t *out);
+uint8_t w5100_read(uint16_t addr);
 
-uint16_t w5100_read16(uint16_t addr, uint16_t *out);
+uint16_t w5100_read16(uint16_t addr);
 
 uint8_t *w5100_read_array(uint16_t addr, uint16_t count, uint8_t *out);
 
