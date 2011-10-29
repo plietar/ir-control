@@ -73,14 +73,17 @@ uint8_t socket_alloc(uint8_t type);
 void socket_free(uint8_t sockid);
 
 void socket_cmd(uint8_t sockid, uint8_t cmd);
+uint8_t socket_status(uint8_t sockid);
+
+uint8_t socket_ir(uint8_t sockid);
+void socket_ir_clear(uint8_t sockid, uint8_t ir);
 
 void socket_set_port(uint8_t sockid, uint16_t port);
 void socket_set_dest_ip(uint8_t sockid, const uint8_t *destip);
 void socket_set_dest_port(uint8_t sockid, uint16_t destport);
 
-
 uint8_t socket_tx_prepare(uint8_t sockid);
-void socket_tx_add(uint8_t sockid, uint16_t length, uint16_t offset, const uint8_t *data);
+void socket_tx_write(uint8_t sockid, uint16_t write_offset, uint16_t length, const uint8_t *data);
 void socket_tx_flush(uint8_t sockid);
 
 uint16_t socket_tx_fsr(uint8_t sockid);
@@ -88,14 +91,11 @@ uint16_t socket_tx_rd(uint8_t sockid);
 uint16_t socket_tx_wr(uint8_t sockid);
 void socket_tx_set_wr(uint8_t sockid, uint16_t wr);
 
-uint8_t socket_ir(uint8_t sockid);
-void socket_ir_clear(uint8_t sockid, uint8_t ir);
+uint16_t socket_rx_read(uint8_t sockid, uint16_t read_offset, uint16_t count, uint8_t *data);
+uint16_t socket_rx_flush(uint8_t sockid, uint16_t count);
 
-uint8_t socket_status(uint8_t sockid);
-
-uint16_t socket_recv(uint8_t sockid, uint16_t maxread, uint8_t *data, uint8_t keep);
-uint16_t socket_available(uint8_t sockid);
-uint16_t socket_rx_offset(uint8_t sockid);
-void socket_rx_inc(uint8_t sockid, uint16_t rd);
+uint16_t socket_rx_rsr(uint8_t sockid);
+uint16_t socket_rx_rd(uint8_t sockid);
+void socket_rx_set_rd(uint8_t sockid, uint16_t rd);
 
 #endif

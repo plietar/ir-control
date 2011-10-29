@@ -74,7 +74,7 @@ int main(void)
     for (uint8_t i = 0; i < 26; i++)
     {
         uint8_t c = 'A' + i;
-        udp_tx_add(sockid, 1, i, (uint8_t *)&c);
+        udp_tx_write(sockid, i, 1, &c);
         printf("Added %c\n\r", c);
     }
 
