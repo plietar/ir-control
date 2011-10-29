@@ -59,32 +59,32 @@ void udp_tx_flush(uint8_t sockid)
 int16_t udp_available(uint8_t sockid)
 {
     uint16_t ret = socket_rx_rsr(sockid);
-    if (ret >= UDP_HEADER_SIZE) // If a packet is available, read its size.
+    if (ret >= sizeof(struct udp_w5100_header)) // If a packet is available, read its size.
     {
-        uint8_t header[UDP_HEADER_SIZE];
-        socket_rx_read(sockid, 0, UDP_HEADER_SIZE, header); // Don't call flush. We only want the data length 
-        ret = header[UDP_HEADER_LENGTH_MSB] << 8 | header[UDP_HEADER_LENGTH_LSB];
+        struct udp_w5100_header header;
+        socket_rx_read(sockid, 0, sizeof(struct udp_w5100_header), (uint8_t*)&header); // Don't call flush. We only want the data length 
+        ret = header.length;
     }
     else
-        ret = -1;
+        ret = 0;
     return ret;
 }
 
 uint16_t udp_recv(uint8_t sockid, uint16_t bufsize, uint8_t *data)
 {
-    uint8_t header[UDP_HEADER_SIZE];
     uint16_t packet_length = 0;
     uint16_t get = 0;
     uint16_t count = 0;
 
-    if (socket_rx_rsr(sockid) < UDP_HEADER_SIZE)
-        return 0;
 
-    socket_rx_read(sockid, 0, UDP_HEADER_SIZE, header);
+    packet_length = udp_available(sockid);
+    
+    if (!packet_length)
+        return packet_length;
 
-    packet_length = header[UDP_HEADER_LENGTH_MSB] << 8 | header[UDP_HEADER_LENGTH_LSB];
     get = MIN(packet_length, bufsize);
-    count = socket_rx_read(sockid, UDP_HEADER_SIZE, get, data);
-    socket_rx_flush(sockid, UDP_HEADER_SIZE + packet_length); // Flush both the header and the packet
+    count = socket_rx_read(sockid, sizeof(struct udp_w5100_header), get, data);
+    socket_rx_flush(sockid, sizeof(struct udp_w5100_header) + packet_length); // Flush both the header and the packet
     return count;
 }
+
