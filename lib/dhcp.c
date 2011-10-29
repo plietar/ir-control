@@ -5,11 +5,10 @@
 #include "util.h"
 #include <stdlib.h>
 #include <string.h>
-#include <stdio.h>
 
 static uint8_t broadcast[] = {255, 255, 255, 255};
 
-uint8_t dhcp_get_ip(uint8_t *ip)
+uint8_t dhcp_get_ip()
 {
     static struct dhcp_packet packet;
     static uint8_t server[4];
@@ -105,6 +104,8 @@ uint8_t dhcp_packet_type(const struct dhcp_packet *packet)
             case DHCP_OPTION_MSGTYPE:
                 return option_ptr[2];
                 break;
+            default:
+                break;
         }
     }
     return 0;
@@ -133,6 +134,8 @@ uint8_t dhcp_parse_offer(const struct dhcp_packet *packet, uint32_t xid, uint8_t
                 break;
             case DHCP_OPTION_SERVER_ID:
                 memcpy(server, option_ptr + 2, 4);
+                break;
+            default:
                 break;
         }
     }

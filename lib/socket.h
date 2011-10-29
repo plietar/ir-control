@@ -80,14 +80,13 @@ void socket_set_dest_port(uint8_t sockid, uint16_t destport);
 
 
 uint8_t socket_tx_prepare(uint8_t sockid);
-void socket_tx_add(uint8_t sockid, uint16_t length, const uint8_t *data);
+void socket_tx_add(uint8_t sockid, uint16_t length, uint16_t offset, const uint8_t *data);
 void socket_tx_flush(uint8_t sockid);
 
-void socket_send(uint8_t sockid, uint16_t length, const uint8_t *data);
-uint16_t socket_tx_free(uint8_t sockid);
-void socket_tx_inc(uint8_t sockid, uint16_t wr);
+uint16_t socket_tx_fsr(uint8_t sockid);
 uint16_t socket_tx_rd(uint8_t sockid);
 uint16_t socket_tx_wr(uint8_t sockid);
+void socket_tx_set_wr(uint8_t sockid, uint16_t wr);
 
 uint8_t socket_ir(uint8_t sockid);
 void socket_ir_clear(uint8_t sockid, uint8_t ir);

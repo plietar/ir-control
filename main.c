@@ -25,11 +25,8 @@ static FILE mystdout = FDEV_SETUP_STREAM(uart_putc_printf, NULL, _FDEV_SETUP_WRI
 int main(void)
 {
     uint8_t sockid = SOCKET_INVALID;
-    char buffer[BUFFER_SIZE];
-    uint16_t length = 0;
     uint8_t destip[] = {192,168,0,119};
     uint16_t port = 5000;
-    uint16_t count = 0;
 
     timer_init();
     uart_init(UART_BAUD_SELECT(9600, F_CPU));
@@ -53,7 +50,7 @@ int main(void)
     uint8_t ret = 0;
     do
     {
-        ret = dhcp_get_ip(ip);
+        ret = dhcp_get_ip();
 
         if(!ret)
         {
@@ -66,17 +63,18 @@ int main(void)
     w5100_get_ipaddr(ip);
     w5100_get_gateway(gw);
     w5100_get_subnet(subnet);
-    printf("Got ip address: %d.%d.%d.%d \n\r", ip[0], ip[1], ip[2], ip[3]);
-    printf("Got gw address: %d.%d.%d.%d \n\r", gw[0], gw[1], gw[2], gw[3]);
-    printf("Got sn address: %d.%d.%d.%d \n\r", subnet[0], subnet[1], subnet[2], subnet[3]);
+    printf_P(PSTR("Got ip address: %d.%d.%d.%d \n\r"), ip[0], ip[1], ip[2], ip[3]);
+    printf_P(PSTR("Got gw address: %d.%d.%d.%d \n\r"), gw[0], gw[1], gw[2], gw[3]);
+    printf_P(PSTR("Got sn address: %d.%d.%d.%d \n\r"), subnet[0], subnet[1], subnet[2], subnet[3]);
 
     sockid = udp_open(5000);
-    printf("Socket %u opened\n\r", sockid);
-    udp_tx_prepare(sockid, destip, 5000);
-    printf("Prepared\n\r");
-    for (char c = 'A'; c <= 'Z'; c++)
+    printf_P(PSTR("Socket %u opened\n\r"), sockid);
+    udp_tx_prepare(sockid, destip, port);
+    printf_P(PSTR("Prepared\n\r"));
+    for (uint8_t i = 0; i < 26; i++)
     {
-        udp_tx_add(sockid, 1, &c);
+        uint8_t c = 'A' + i;
+        udp_tx_add(sockid, 1, i, (uint8_t *)&c);
         printf("Added %c\n\r", c);
     }
 

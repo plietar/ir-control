@@ -41,8 +41,9 @@ uint8_t w5100_read(uint16_t addr, uint8_t *out)
 uint16_t w5100_read16(uint16_t addr, uint16_t *out)
 {
     uint16_t data = 0;
-    data = w5100_read(addr,NULL) << 8;
-    data |= w5100_read(addr + 1, NULL);
+    uint8_t high = w5100_read(addr, NULL);
+    uint8_t low = w5100_read(addr + 1, NULL);
+    data = ( high << 8 | low );
     if (out)
         *out = data;
     return data;
@@ -89,7 +90,7 @@ void w5100_write16(uint16_t addr, uint16_t data)
     w5100_write(addr +1, data & 0x00FF);
 }
 
-void w5100_write16_add(uint16_t addr, int16_t data)
+void w5100_write16_add(uint16_t addr, uint16_t data)
 {
     w5100_write16(addr, w5100_read16(addr, NULL) + data);
 }

@@ -75,7 +75,7 @@ struct dhcp_packet
 
 #define DHCP_OPTION_END 255
 
-uint8_t dhcp_get_ip(uint8_t *ip);
+uint8_t dhcp_get_ip();
 
 void dhcp_build_packet(struct dhcp_packet *packet, uint32_t xid);
 void dhcp_send_discover(uint8_t sockid, struct dhcp_packet *packet, uint32_t xid);

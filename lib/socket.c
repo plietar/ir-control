@@ -1,7 +1,6 @@
 #include "socket.h"
 #include "w5100.h"
 #include "util.h"
-#include <stdio.h>
 
 uint8_t socket_get_type(uint8_t sockid)
 {
@@ -61,38 +60,6 @@ void socket_set_dest_port(uint8_t sockid, uint16_t destport)
     w5100_write16(W5100_SOCKET(sockid) + W5100_SOCK_DPORT, destport);
 }
 
-void socket_send(uint8_t sockid, uint16_t length, const uint8_t *data)
-{
-    while(length > socket_tx_free(sockid)) // Wait for free space
-    {
-    }
-
-    uint16_t offset = socket_tx_wr(sockid);
-    uint16_t start = offset + SOCKET_TX_BASE_S(sockid); 
-
-    if (start + length >= SOCKET_TX_END_S(sockid)) // If we need to split it up ..
-    {
-        uint16_t first_size = SOCKET_TX_END_S(sockid) - start;
-        uint16_t second_size = length - first_size;
-        
-        w5100_write_array(start, first_size, data);
-        w5100_write_array(SOCKET_TX_BASE_S(sockid), second_size, data + first_size);
-    }
-    else
-    {
-        w5100_write_array(start, length, data);
-    }
-    socket_tx_inc(sockid, length);
-    socket_cmd(sockid, SOCKET_CMD_SEND);
-
-    // Wait for sending to be complete
-    while (!(socket_ir(sockid) & W5100_SOCK_IR_SEND_OK))
-    {
-    }
-    // Reset the SEND_OK interrupt
-    socket_ir_clear(sockid, W5100_SOCK_IR_SEND_OK);
-}
-
 uint8_t socket_tx_prepare(uint8_t sockid)
 {
     if (socket_tx_rd(sockid) != socket_tx_wr(sockid)) // Data is pending
@@ -101,16 +68,15 @@ uint8_t socket_tx_prepare(uint8_t sockid)
     return 1;
 }
 
-void socket_tx_add(uint8_t sockid, uint16_t length, const uint8_t *data)
+void socket_tx_add(uint8_t sockid, uint16_t length, uint16_t packet_offset, const uint8_t *data)
 {
-    while(length > socket_tx_free(sockid)) // Wait for free space
+    while(length > socket_tx_fsr(sockid)) // Wait for free space
     {
     }
 
-    uint16_t offset = socket_tx_wr(sockid);
-    uint16_t start = offset + SOCKET_TX_BASE_S(sockid);
-    printf("Address: %u WR: %d length: %d\n\r", start, socket_tx_wr(sockid), length); 
-
+    uint16_t offset = socket_tx_wr(sockid) + packet_offset;
+    uint16_t start = SOCKET_TX_BASE_S(sockid)+ offset;
+    
     if (start + length >= SOCKET_TX_END_S(sockid)) // If we need to split it up ..
     {
         uint16_t first_size = SOCKET_TX_END_S(sockid) - start;
@@ -123,7 +89,9 @@ void socket_tx_add(uint8_t sockid, uint16_t length, const uint8_t *data)
     {
         w5100_write_array(start, length, data);
     }
-    socket_tx_inc(sockid, length);
+
+    socket_tx_set_wr(sockid, offset + length);
+    w5100_write16(W5100_SOCKET(sockid) + W5100_SOCK_TX_WR, offset + length);
 }
 
 void socket_tx_flush(uint8_t sockid)
@@ -138,7 +106,7 @@ void socket_tx_flush(uint8_t sockid)
     socket_ir_clear(sockid, W5100_SOCK_IR_SEND_OK);
 }
 
-uint16_t socket_tx_free(uint8_t sockid)
+uint16_t socket_tx_fsr(uint8_t sockid)
 {
     return w5100_read16(W5100_SOCKET(sockid) + W5100_SOCK_TX_FSR, NULL);
 }
@@ -148,14 +116,14 @@ uint16_t socket_tx_wr(uint8_t sockid)
     return w5100_read16(W5100_SOCKET(sockid) + W5100_SOCK_TX_WR, NULL) & SOCKET_TX_MASK_S(sockid);
 }
 
+void socket_tx_set_wr(uint8_t sockid, uint16_t wr)
+{
+    w5100_write16(W5100_SOCKET(sockid) + W5100_SOCK_TX_WR, wr);
+}
+
 uint16_t socket_tx_rd(uint8_t sockid)
 {
     return w5100_read16(W5100_SOCKET(sockid) + W5100_SOCK_TX_RD, NULL) & SOCKET_TX_MASK_S(sockid);
-}
-
-void socket_tx_inc(uint8_t sockid, uint16_t wr)
-{
-    w5100_write16_add(W5100_SOCKET(sockid) + W5100_SOCK_TX_WR, wr); 
 }
 
 uint8_t socket_ir(uint8_t sockid)
@@ -190,7 +158,6 @@ uint16_t socket_recv(uint8_t sockid, uint16_t maxread, uint8_t *data, uint8_t ke
 
         if (start + length >= SOCKET_RX_END_S(sockid)) // If we need to split it up ..
         {
-            printf("*** Warning wrap **");
             uint16_t first_size = SOCKET_RX_END_S(sockid) - start;
             uint16_t second_size = length - first_size;
 

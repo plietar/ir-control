@@ -29,11 +29,13 @@ AS=$(PREFIX)gcc
 LD=$(PREFIX)gcc
 AVRDUDE=avrdude
 
-cwarnings=-pedantic -wall -wextra -wfloat-equal -wwrite-strings -wpointer-arith -wcast-qual -wcast-align  -wshadow -wredundant-decls -wdouble-promotion -winit-self -wswitch-default -wswitch-enum -wundef -wlogical-op -winline
-# -wconversion
-CFLAGS= $(CWARNINGS) -Werror -std=c99 -Os -DF_CPU=$(CLOCK) -mmcu=$(DEVICE) $(addprefix -I,$(INCLUDE))
+cwarnings=-pedantic -Wall -Wextra -Wfloat-equal -Wwrite-strings -Wpointer-arith -Wcast-qual -Wcast-align  -Wshadow -Wredundant-decls -Wdouble-promotion -Winit-self -Wswitch-default -Wswitch-enum -Wundef -Wlogical-op -Winline
+# -Wconversion
+copti=-ffunction-sections -fdata-sections -O1
+ldopti=-Wl,--gc-sections
+CFLAGS= $(CWARNINGS) -Werror -std=c99 -DF_CPU=$(CLOCK) -mmcu=$(DEVICE) $(addprefix -I,$(INCLUDE)) $(cwarnings) $(copti)
 AFLAGS=$(CFLAGS) -x assembler-with-cpp
-LFLAGS=$(CFLAGS)
+LFLAGS=$(CFLAGS) $(ldopti)
 AVRFLAGS=$(PROGRAMMER) -p $(DEVICE)
 
 OBJS=$(addprefix $(OBJDIR)/,$(addsuffix .o,$(SRCS)))

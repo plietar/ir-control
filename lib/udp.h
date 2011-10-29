@@ -33,7 +33,7 @@ void udp_send(uint8_t sockid, const uint8_t *destip, uint16_t destport, uint16_t
  * Returns 0 on failure and 1 on success.
  */
 uint8_t udp_tx_prepare(uint8_t sockid, const uint8_t *destip, uint16_t destport);
-void udp_tx_add(uint8_t sockid, uint16_t length, const uint8_t *data);
+void udp_tx_add(uint8_t sockid, uint16_t length, uint16_t offset, const uint8_t *data);
 void udp_tx_flush(uint8_t sockid);
 
 int16_t udp_available(uint8_t sockid);

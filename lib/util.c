@@ -1,4 +1,5 @@
 #include "util.h"
+#include "mcu.h"
 
 uint16_t util_htons(unsigned short hostshort)
 {

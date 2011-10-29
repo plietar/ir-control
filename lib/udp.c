@@ -1,7 +1,6 @@
 #include "udp.h"
 #include "socket.h"
 #include "util.h"
-#include <stdio.h>
 
 uint8_t udp_open(uint16_t port)
 {
@@ -27,10 +26,11 @@ void udp_close(uint8_t sockid)
 
 void udp_send(uint8_t sockid, const uint8_t *destip, uint16_t destport, uint16_t length, const uint8_t *data)
 {
-    socket_set_dest_ip(sockid, destip);
-    socket_set_dest_port(sockid, destport);
+    if (!udp_tx_prepare(sockid, destip, destport))
+        return;
 
-    socket_send(sockid, length, data);
+    udp_tx_add(sockid, length, 0, data);
+    udp_tx_flush(sockid);
 }
 
 
@@ -43,12 +43,12 @@ uint8_t udp_tx_prepare(uint8_t sockid, const uint8_t *destip, uint16_t destport)
         socket_set_dest_ip(sockid, destip);
         socket_set_dest_port(sockid, destport);
     }
-    return 0;
+    return ret;
 }
 
-void udp_tx_add(uint8_t sockid, uint16_t length, const uint8_t *data)
+void udp_tx_add(uint8_t sockid, uint16_t length, uint16_t offset, const uint8_t *data)
 {
-    socket_tx_add(sockid, length, data);
+    socket_tx_add(sockid, length, offset, data);
 }
 
 void udp_tx_flush(uint8_t sockid)
@@ -72,7 +72,6 @@ int16_t udp_available(uint8_t sockid)
 
 uint16_t udp_recv(uint8_t sockid, uint16_t bufsize, uint8_t *data)
 {
-    (void)data;
     uint8_t header[UDP_HEADER_SIZE];
     uint16_t packet_length = 0;
     uint16_t get = 0;

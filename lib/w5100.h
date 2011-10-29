@@ -88,7 +88,7 @@ void w5100_write_xor(uint16_t addr, uint8_t data);
 
 void w5100_write16(uint16_t addr, uint16_t data);
 
-void w5100_write16_add(uint16_t addr, int16_t data);
+void w5100_write16_add(uint16_t addr, uint16_t data);
 
 void w5100_write_array(uint16_t start, uint16_t count, const uint8_t *data);
 
