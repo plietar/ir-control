@@ -2,6 +2,7 @@
 #define _w5100_h__
 
 #include <stdint.h>
+#include "nettypes.h"
 
 #define W5100_SS_DDR DDRB
 #define W5100_SS_PORT PORTB
@@ -72,25 +73,25 @@ void w5100_init();
 
 void w5100_init_no_spi();
 
-uint8_t w5100_read(uint16_t addr);
+uint8_t w5100_read(net_addr_t addr);
 
-uint16_t w5100_read16(uint16_t addr);
+uint16_t w5100_read16(net_addr_t addr);
 
-uint8_t *w5100_read_array(uint16_t addr, uint16_t count, uint8_t *out);
+uint8_t *w5100_read_array(net_addr_t addr, net_size_t count, uint8_t *out);
 
-void w5100_write(uint16_t addr, uint8_t data);
+void w5100_write(net_addr_t addr, uint8_t data);
 
-void w5100_write_or(uint16_t addr, uint8_t data);
+void w5100_write_or(net_addr_t addr, uint8_t data);
 
-void w5100_write_and(uint16_t addr, uint8_t data);
+void w5100_write_and(net_addr_t addr, uint8_t data);
 
-void w5100_write_xor(uint16_t addr, uint8_t data);
+void w5100_write_xor(net_addr_t addr, uint8_t data);
 
-void w5100_write16(uint16_t addr, uint16_t data);
+void w5100_write16(net_addr_t addr, uint16_t data);
 
-void w5100_write16_add(uint16_t addr, uint16_t data);
+void w5100_write16_add(net_addr_t addr, uint16_t data);
 
-void w5100_write_array(uint16_t start, uint16_t count, const uint8_t *data);
+void w5100_write_array(net_addr_t addr, net_size_t count, const uint8_t *data);
 
 void w5100_set_hwaddr(const uint8_t *hwaddr);
 void w5100_get_hwaddr(uint8_t *hwaddr);

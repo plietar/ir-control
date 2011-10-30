@@ -2,25 +2,25 @@
 #include "w5100.h"
 #include "util.h"
 
-uint8_t socket_get_type(uint8_t sockid)
+uint8_t socket_get_type(net_socket_t sockid)
 {
     return w5100_read(W5100_SOCKET(sockid) + W5100_SOCK_MR) & W5100_SOCK_MR_P_MSK;
 }
 
-void socket_set_type(uint8_t sockid, uint8_t type)
+void socket_set_type(net_socket_t sockid, uint8_t type)
 {
     w5100_write_and(W5100_SOCKET(sockid) + W5100_SOCK_MR, ~W5100_SOCK_MR_P_MSK); // Turn off all type bits
     w5100_write_or(W5100_SOCKET(sockid) + W5100_SOCK_MR, type << W5100_SOCK_MR_P); // And set the corresponding ones.
 }
 
-uint8_t socket_alloc(uint8_t type)
+net_socket_t socket_alloc(uint8_t type)
 {
 #if SOCKET_SOCK0_RESERVED
     // If sock 0 is required start with this one, else start with socket 1 to keep 0 for later ..
-    int i = (type >= SOCKET_TYPE_SOCK0)?0:1;
+    net_socket_t i = (type >= SOCKET_TYPE_SOCK0)?0:1;
 #else
     // Don't reserve socket 0.
-    int i = 0; 
+    net_socket_t i = 0;
 #endif
 
     for (;i < ((type >= SOCKET_TYPE_SOCK0)?1:SOCKET_SOCK_COUNT); i++)
@@ -34,51 +34,51 @@ uint8_t socket_alloc(uint8_t type)
     return SOCKET_INVALID;
 }
 
-void socket_free(uint8_t sockid)
+void socket_free(net_socket_t sockid)
 {
     if (sockid != SOCKET_INVALID)
         socket_set_type(sockid, SOCKET_TYPE_CLOSED);
 }
 
-void socket_cmd(uint8_t sockid, uint8_t cmd)
+void socket_cmd(net_socket_t sockid, uint8_t cmd)
 {
     w5100_write(W5100_SOCKET(sockid) + W5100_SOCK_CR, cmd);
 }
 
-uint8_t socket_status(uint8_t sockid)
+uint8_t socket_status(net_socket_t sockid)
 {
     return w5100_read(W5100_SOCKET(sockid) + W5100_SOCK_SR);
 }
 
 
-uint8_t socket_ir(uint8_t sockid)
+uint8_t socket_ir(net_socket_t sockid)
 {
     return w5100_read(W5100_SOCKET(sockid) + W5100_SOCK_IR);
 }
 
-void socket_ir_clear(uint8_t sockid, uint8_t ir)
+void socket_ir_clear(net_socket_t sockid, uint8_t ir)
 {
     w5100_write(W5100_SOCKET(sockid) + W5100_SOCK_IR, ir);
 }
 
 
-void socket_set_port(uint8_t sockid, uint16_t port)
+void socket_set_port(net_socket_t sockid, uint16_t port)
 {
     w5100_write16(W5100_SOCKET(sockid) + W5100_SOCK_PORT, port);
 }
 
-void socket_set_dest_ip(uint8_t sockid, const uint8_t *destip)
+void socket_set_dest_ip(net_socket_t sockid, const uint8_t *destip)
 {
     w5100_write_array(W5100_SOCKET(sockid) + W5100_SOCK_DIPR, 4, destip);
 }
 
-void socket_set_dest_port(uint8_t sockid, uint16_t destport)
+void socket_set_dest_port(net_socket_t sockid, uint16_t destport)
 {
     w5100_write16(W5100_SOCKET(sockid) + W5100_SOCK_DPORT, destport);
 }
 
 
-uint8_t socket_tx_prepare(uint8_t sockid)
+uint8_t socket_tx_prepare(net_socket_t sockid)
 {
     if (socket_tx_rd(sockid) != socket_tx_wr(sockid)) // Data is pending
         return 0;
@@ -86,7 +86,7 @@ uint8_t socket_tx_prepare(uint8_t sockid)
     return 1;
 }
 
-void socket_tx_write(uint8_t sockid, uint16_t write_offset, uint16_t length, const uint8_t *data)
+void socket_tx_write(net_socket_t sockid, uint16_t write_offset, uint16_t length, const uint8_t *data)
 {
     while(length > socket_tx_fsr(sockid)) // Wait for free space
     {
@@ -112,7 +112,7 @@ void socket_tx_write(uint8_t sockid, uint16_t write_offset, uint16_t length, con
     w5100_write16(W5100_SOCKET(sockid) + W5100_SOCK_TX_WR, offset + length);
 }
 
-void socket_tx_flush(uint8_t sockid)
+void socket_tx_flush(net_socket_t sockid)
 {
     socket_cmd(sockid, SOCKET_CMD_SEND);
 
@@ -125,28 +125,28 @@ void socket_tx_flush(uint8_t sockid)
 }
 
 
-uint16_t socket_tx_fsr(uint8_t sockid)
+uint16_t socket_tx_fsr(net_socket_t sockid)
 {
     return w5100_read16(W5100_SOCKET(sockid) + W5100_SOCK_TX_FSR);
 }
 
-uint16_t socket_tx_wr(uint8_t sockid)
+uint16_t socket_tx_wr(net_socket_t sockid)
 {
     return w5100_read16(W5100_SOCKET(sockid) + W5100_SOCK_TX_WR) & SOCKET_TX_MASK_S(sockid);
 }
 
-void socket_tx_set_wr(uint8_t sockid, uint16_t wr)
+void socket_tx_set_wr(net_socket_t sockid, uint16_t wr)
 {
     w5100_write16(W5100_SOCKET(sockid) + W5100_SOCK_TX_WR, wr);
 }
 
-uint16_t socket_tx_rd(uint8_t sockid)
+uint16_t socket_tx_rd(net_socket_t sockid)
 {
     return w5100_read16(W5100_SOCKET(sockid) + W5100_SOCK_TX_RD) & SOCKET_TX_MASK_S(sockid);
 }
 
 
-uint16_t socket_rx_read(uint8_t sockid, uint16_t read_offset, uint16_t count, uint8_t *data)
+uint16_t socket_rx_read(net_socket_t sockid, uint16_t read_offset, uint16_t count, uint8_t *data)
 {
     uint16_t available = socket_rx_rsr(sockid);
     uint16_t length = MIN(available, count);
@@ -170,7 +170,7 @@ uint16_t socket_rx_read(uint8_t sockid, uint16_t read_offset, uint16_t count, ui
     return length;
 }
 
-uint16_t socket_rx_flush(uint8_t sockid, uint16_t count)
+uint16_t socket_rx_flush(net_socket_t sockid, uint16_t count)
 {
     uint16_t available = socket_rx_rsr(sockid);
     uint16_t length = MIN(available, count);
@@ -182,17 +182,17 @@ uint16_t socket_rx_flush(uint8_t sockid, uint16_t count)
     return length;
 }
 
-uint16_t socket_rx_rsr(uint8_t sockid)
+uint16_t socket_rx_rsr(net_socket_t sockid)
 {
     return w5100_read16(W5100_SOCKET(sockid) + W5100_SOCK_RX_RSR);
 }
 
-uint16_t socket_rx_rd(uint8_t sockid)
+uint16_t socket_rx_rd(net_socket_t sockid)
 {
     return w5100_read16(W5100_SOCKET(sockid) + W5100_SOCK_RX_RD) & SOCKET_RX_MASK_S(sockid);
 }
 
-void socket_rx_set_rd(uint8_t sockid, uint16_t rd)
+void socket_rx_set_rd(net_socket_t sockid, uint16_t rd)
 {
     w5100_write16(W5100_SOCKET(sockid) + W5100_SOCK_RX_RD, rd);
 }

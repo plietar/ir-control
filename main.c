@@ -24,7 +24,7 @@ static FILE mystdout = FDEV_SETUP_STREAM(uart_putc_printf, NULL, _FDEV_SETUP_WRI
 
 int main(void)
 {
-    uint8_t sockid = SOCKET_INVALID;
+    net_socket_t sockid = SOCKET_INVALID;
     uint8_t destip[] = {192,168,0,119};
     uint16_t port = 5000;
 

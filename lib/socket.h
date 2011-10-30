@@ -3,14 +3,13 @@
 
 #include <stdint.h>
 #include <stddef.h>
+#include "nettypes.h"
 
 #define SOCKET_SOCK0_RESERVED 0 // Should socket 0 be reserved for sock 0 only protocols ?
 #define SOCKET_SOCK_COUNT 4
 
 #define SOCKET_TMSR 0x55
 #define SOCKET_RMSR 0x55
-
-#define SOCKET_INVALID 0xFF // This represents an invalid socket
 
 #define SOCKET_TYPE_CLOSED 0x0
 #define SOCKET_TYPE_TCP 0x1
@@ -66,36 +65,36 @@
 #define SOCKET_RX_MASK_S(sockid) (SOCKET_RX_SIZE - 1)
 #define SOCKET_RX_END_S(sockid) (SOCKET_RX_BASE_S(sockid) + SOCKET_RX_MASK_S(sockid) + 1)
 
-uint8_t socket_get_type(uint8_t sockid);
-void socket_set_type(uint8_t sockid, uint8_t type);
+uint8_t socket_get_type(net_socket_t sockid);
+void socket_set_type(net_socket_t sockid, uint8_t type);
 
-uint8_t socket_alloc(uint8_t type);
-void socket_free(uint8_t sockid);
+net_socket_t socket_alloc(uint8_t type);
+void socket_free(net_socket_t sockid);
 
-void socket_cmd(uint8_t sockid, uint8_t cmd);
-uint8_t socket_status(uint8_t sockid);
+void socket_cmd(net_socket_t sockid, uint8_t cmd);
+uint8_t socket_status(net_socket_t sockid);
 
-uint8_t socket_ir(uint8_t sockid);
-void socket_ir_clear(uint8_t sockid, uint8_t ir);
+uint8_t socket_ir(net_socket_t sockid);
+void socket_ir_clear(net_socket_t sockid, uint8_t ir);
 
-void socket_set_port(uint8_t sockid, uint16_t port);
-void socket_set_dest_ip(uint8_t sockid, const uint8_t *destip);
-void socket_set_dest_port(uint8_t sockid, uint16_t destport);
+void socket_set_port(net_socket_t sockid, uint16_t port);
+void socket_set_dest_ip(net_socket_t sockid, const uint8_t *destip);
+void socket_set_dest_port(net_socket_t sockid, uint16_t destport);
 
-uint8_t socket_tx_prepare(uint8_t sockid);
-void socket_tx_write(uint8_t sockid, uint16_t write_offset, uint16_t length, const uint8_t *data);
-void socket_tx_flush(uint8_t sockid);
+uint8_t socket_tx_prepare(net_socket_t sockid);
+void socket_tx_write(net_socket_t sockid, uint16_t write_offset, uint16_t length, const uint8_t *data);
+void socket_tx_flush(net_socket_t sockid);
 
-uint16_t socket_tx_fsr(uint8_t sockid);
-uint16_t socket_tx_rd(uint8_t sockid);
-uint16_t socket_tx_wr(uint8_t sockid);
-void socket_tx_set_wr(uint8_t sockid, uint16_t wr);
+uint16_t socket_tx_fsr(net_socket_t sockid);
+uint16_t socket_tx_rd(net_socket_t sockid);
+uint16_t socket_tx_wr(net_socket_t sockid);
+void socket_tx_set_wr(net_socket_t sockid, uint16_t wr);
 
-uint16_t socket_rx_read(uint8_t sockid, uint16_t read_offset, uint16_t count, uint8_t *data);
-uint16_t socket_rx_flush(uint8_t sockid, uint16_t count);
+uint16_t socket_rx_read(net_socket_t sockid, uint16_t read_offset, uint16_t count, uint8_t *data);
+uint16_t socket_rx_flush(net_socket_t sockid, uint16_t count);
 
-uint16_t socket_rx_rsr(uint8_t sockid);
-uint16_t socket_rx_rd(uint8_t sockid);
-void socket_rx_set_rd(uint8_t sockid, uint16_t rd);
+uint16_t socket_rx_rsr(net_socket_t sockid);
+uint16_t socket_rx_rd(net_socket_t sockid);
+void socket_rx_set_rd(net_socket_t sockid, uint16_t rd);
 
 #endif

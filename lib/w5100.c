@@ -24,7 +24,7 @@ void w5100_init_no_spi()
     w5100_write(W5100_TMSR, 0x55);
 }
 
-uint8_t w5100_read(uint16_t addr)
+uint8_t w5100_read(net_addr_t addr)
 {
     W5100_SELECT();
     uint8_t data;
@@ -36,7 +36,7 @@ uint8_t w5100_read(uint16_t addr)
     return data;
 }
 
-uint16_t w5100_read16(uint16_t addr)
+uint16_t w5100_read16(net_addr_t addr)
 {
     uint16_t data = 0;
     uint8_t high = w5100_read(addr);
@@ -45,9 +45,9 @@ uint16_t w5100_read16(uint16_t addr)
     return data;
 }
 
-uint8_t *w5100_read_array(uint16_t addr, uint16_t count, uint8_t *out)
+uint8_t *w5100_read_array(net_addr_t addr, net_size_t count, uint8_t *out)
 {
-    for(uint16_t i = 0; i < count; i++)
+    for(net_size_t i = 0; i < count; i++)
     {
         out[i] = w5100_read(addr + i);
     }
@@ -55,7 +55,7 @@ uint8_t *w5100_read_array(uint16_t addr, uint16_t count, uint8_t *out)
     return out;
 }
 
-void w5100_write(uint16_t addr, uint8_t data)
+void w5100_write(net_addr_t addr, uint8_t data)
 {
     W5100_SELECT();
     spi_transfer(W5100_OPCODE_WRITE); // Start write sequence
@@ -65,37 +65,37 @@ void w5100_write(uint16_t addr, uint8_t data)
     W5100_DESELECT();
 }
 
-void w5100_write_or(uint16_t addr, uint8_t data)
+void w5100_write_or(net_addr_t addr, uint8_t data)
 {
     w5100_write(addr, w5100_read(addr) | data);
 }
 
-void w5100_write_and(uint16_t addr, uint8_t data)
+void w5100_write_and(net_addr_t addr, uint8_t data)
 {
     w5100_write(addr, w5100_read(addr) & data);
 }
 
-void w5100_write_xor(uint16_t addr, uint8_t data)
+void w5100_write_xor(net_addr_t addr, uint8_t data)
 {
     w5100_write(addr, w5100_read(addr) ^ data);
 }
 
-void w5100_write16(uint16_t addr, uint16_t data)
+void w5100_write16(net_addr_t addr, uint16_t data)
 {
     w5100_write(addr, (data & 0xFF00) >> 8);
     w5100_write(addr +1, data & 0x00FF);
 }
 
-void w5100_write16_add(uint16_t addr, uint16_t data)
+void w5100_write16_add(net_addr_t addr, uint16_t data)
 {
     w5100_write16(addr, w5100_read16(addr) + data);
 }
 
-void w5100_write_array(uint16_t start, uint16_t count, const uint8_t *data)
+void w5100_write_array(net_addr_t addr, net_size_t count, const uint8_t *data)
 {
-    for (uint16_t i = 0; i < count; i++)
+    for (net_size_t i = 0; i < count; i++)
     {
-        w5100_write(start + i, data[i]);
+        w5100_write(addr + i, data[i]);
     }
 }
 

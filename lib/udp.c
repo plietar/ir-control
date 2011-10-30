@@ -1,10 +1,11 @@
 #include "udp.h"
 #include "socket.h"
 #include "util.h"
+#include "nettypes.h"
 
-uint8_t udp_open(uint16_t port)
+net_socket_t udp_open(uint16_t port)
 {
-    uint8_t sockid = socket_alloc(SOCKET_TYPE_UDP);
+    net_socket_t sockid = socket_alloc(SOCKET_TYPE_UDP);
     if (sockid == SOCKET_INVALID)
         return sockid;
 
@@ -14,27 +15,23 @@ uint8_t udp_open(uint16_t port)
     return sockid;
 }
 
-uint8_t udp_ready(uint8_t sockid)
+uint8_t udp_ready(net_socket_t sockid)
 {
     return socket_status(sockid) == SOCKET_STATUS_UDP;
 }
 
-void udp_close(uint8_t sockid)
+void udp_close(net_socket_t sockid)
 {
     socket_free(sockid);
 }
 
-void udp_send(uint8_t sockid, const uint8_t *destip, uint16_t destport, uint16_t length, const uint8_t *data)
-{
-    if (!udp_tx_prepare(sockid, destip, destport))
-        return;
 
-    udp_tx_write(sockid, 0, length, data);
-    udp_tx_flush(sockid);
-}
+// TODO: implement these functions
+// uint16_t udp_rx_available(net_socket_t sockid);
+// uint16_t udp_rx_read(int8_t sockid, uint16_t read_offset, uint16_t count, uint8_t *data);
+// void udp_rx_flush(net_socket_t sockid);
 
-
-uint8_t udp_tx_prepare(uint8_t sockid, const uint8_t *destip, uint16_t destport)
+uint8_t udp_tx_prepare(net_socket_t sockid, const uint8_t *destip, uint16_t destport)
 {
     uint8_t ret = 0;
     ret = socket_tx_prepare(sockid);
@@ -46,17 +43,26 @@ uint8_t udp_tx_prepare(uint8_t sockid, const uint8_t *destip, uint16_t destport)
     return ret;
 }
 
-void udp_tx_write(uint8_t sockid, uint16_t offset, uint16_t length, const uint8_t *data)
+void udp_tx_write(net_socket_t sockid, uint16_t offset, uint16_t length, const uint8_t *data)
 {
     socket_tx_write(sockid, offset, length, data);
 }
 
-void udp_tx_flush(uint8_t sockid)
+void udp_tx_flush(net_socket_t sockid)
 {
     socket_tx_flush(sockid);
 }
 
-int16_t udp_available(uint8_t sockid)
+void udp_send(net_socket_t sockid, const uint8_t *destip, uint16_t destport, uint16_t length, const uint8_t *data)
+{
+    if (!udp_tx_prepare(sockid, destip, destport))
+        return;
+
+    udp_tx_write(sockid, 0, length, data);
+    udp_tx_flush(sockid);
+}
+
+int16_t udp_available(net_socket_t sockid)
 {
     uint16_t ret = socket_rx_rsr(sockid);
     if (ret >= sizeof(struct udp_w5100_header)) // If a packet is available, read its size.
@@ -70,7 +76,7 @@ int16_t udp_available(uint8_t sockid)
     return ret;
 }
 
-uint16_t udp_recv(uint8_t sockid, uint16_t bufsize, uint8_t *data)
+uint16_t udp_recv(net_socket_t sockid, uint16_t bufsize, uint8_t *data)
 {
     uint16_t packet_length = 0;
     uint16_t get = 0;
