@@ -59,7 +59,7 @@ net_size_t udp_rx_read(int8_t sockid, net_offset_t read_offset, net_size_t bufsi
     net_size_t count = 0;
 
 
-    packet_length = udp_available(sockid);
+    packet_length = udp_rx_available(sockid);
     
     if (packet_length < 0)
         return packet_length;
@@ -75,7 +75,7 @@ void udp_rx_flush(net_socket_t sockid)
 {
     net_size_t packet_length = 0;
     
-    packet_length = udp_available(sockid);
+    packet_length = udp_rx_available(sockid);
 
     if (packet_length < 0)
         return;
@@ -136,7 +136,7 @@ uint16_t udp_recv(net_socket_t sockid, uint16_t bufsize, uint8_t *data)
     uint16_t count = 0;
 
 
-    packet_length = udp_available(sockid);
+    packet_length = udp_rx_available(sockid);
     
     if (!packet_length)
         return packet_length;

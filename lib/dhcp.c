@@ -25,9 +25,10 @@ uint8_t dhcp_get_ip()
 
     while(1)
     {
-        if (udp_available(sockid) > 0 )
+        if (udp_rx_available(sockid) >= 0 )
         {
-            udp_recv(sockid, sizeof(packet), (uint8_t *)&packet);
+            udp_rx_read(sockid, 0, sizeof(packet), (uint8_t *)&packet);
+            udp_rx_flush(sockid);
             if (dhcp_parse_offer(&packet, xid, server))
                 break;
         }
@@ -37,9 +38,10 @@ uint8_t dhcp_get_ip()
 
     while(1)
     {
-        if (udp_available(sockid) > 0 )
+        if (udp_rx_available(sockid) > 0 )
         {
-            udp_recv(sockid, sizeof(packet), (uint8_t *)&packet);
+            udp_rx_read(sockid, 0, sizeof(packet), (uint8_t *)&packet);
+            udp_rx_flush(sockid);
             if (dhcp_parse_ack(&packet, xid))
                 break;
         }
@@ -77,7 +79,9 @@ void dhcp_send_discover(uint8_t sockid, struct dhcp_packet *packet, uint32_t xid
     option_ptr = dhcp_option_maxlength(option_ptr, sizeof(struct dhcp_packet));
     option_ptr = dhcp_option_end(option_ptr);
 
-    udp_send(sockid, broadcast, DHCP_SERVER_PORT, sizeof(struct dhcp_packet), (uint8_t *)packet);
+    udp_tx_prepare(sockid, broadcast, DHCP_SERVER_PORT);
+    udp_tx_write(sockid, 0, sizeof(struct dhcp_packet), (uint8_t *)packet);
+    udp_tx_flush(sockid);
 }
 
 void dhcp_send_request(uint8_t sockid, struct dhcp_packet *packet, const uint8_t *server, uint32_t xid)
@@ -92,7 +96,9 @@ void dhcp_send_request(uint8_t sockid, struct dhcp_packet *packet, const uint8_t
     option_ptr = dhcp_option_server_id(option_ptr, server);
     option_ptr = dhcp_option_end(option_ptr);
 
-    udp_send(sockid, broadcast, DHCP_SERVER_PORT, sizeof(struct dhcp_packet), (uint8_t *)packet);
+    udp_tx_prepare(sockid, broadcast, DHCP_SERVER_PORT);
+    udp_tx_write(sockid, 0, sizeof(struct dhcp_packet), (uint8_t *)packet);
+    udp_tx_flush(sockid);
 }
 
 uint8_t dhcp_packet_type(const struct dhcp_packet *packet)

@@ -40,7 +40,8 @@ void udp_rx_flush(net_socket_t sockid);
  * These are the compatiblity functions. They will be deprecated and shouldn't be used.
  */
 // Sends a whole packet
-void udp_send(net_socket_t sockid, const uint8_t *destip, uint16_t destport, uint16_t length, const uint8_t *data);
-int16_t udp_available(net_socket_t sockid);
-uint16_t udp_recv(net_socket_t sockid, uint16_t max, uint8_t *data);
+void udp_send(net_socket_t sockid, const uint8_t *destip, uint16_t destport, uint16_t length, const uint8_t *data) __attribute((deprecated));
+int16_t udp_available(net_socket_t sockid) __attribute((deprecated));
+uint16_t udp_recv(net_socket_t sockid, uint16_t max, uint8_t *data) __attribute((deprecated));
+
 #endif
