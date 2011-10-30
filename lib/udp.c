@@ -27,13 +27,61 @@ void udp_close(net_socket_t sockid)
 
 
 // TODO: implement these functions
-// uint16_t udp_rx_available(net_socket_t sockid);
-// uint16_t udp_rx_read(int8_t sockid, uint16_t read_offset, uint16_t count, uint8_t *data);
-// void udp_rx_flush(net_socket_t sockid);
 
-//net_size_t udp_rx_available(net_socket_t sockid);
-//net_size_t udp_rx_read(int8_t sockid, net_offset_t read_offset, net_size_t count, uint8_t *data);
-//void udp_rx_flush(net_socket_t sockid);
+net_size_t udp_rx_available(net_socket_t sockid)
+{
+    net_size_t ret = socket_rx_rsr(sockid);
+    if (ret >= (net_size_t)sizeof(struct udp_w5100_header)) // If a packet is available, read its data size.
+    {
+        struct udp_w5100_header header;
+        socket_rx_read(sockid, 0, sizeof(struct udp_w5100_header), (uint8_t*)&header); // Don't call flush. We only want the data length 
+        ret = header.length;
+    }
+    else
+        ret = -1;
+    return ret;
+}
+
+void udp_rx_header(net_socket_t sockid, struct udp_w5100_header *out)
+{
+    net_size_t size = socket_rx_rsr(sockid);
+
+    if (size >= (net_size_t)sizeof(struct udp_w5100_header)) // If a packet is available, read its data size.
+    {
+        socket_rx_read(sockid, 0, sizeof(struct udp_w5100_header), (uint8_t*)out); // Don't call flush. We only want the data length 
+        out->destport = util_ntohs(out->destport);
+    }
+}
+
+net_size_t udp_rx_read(int8_t sockid, net_offset_t read_offset, net_size_t bufsize, uint8_t *data)
+{
+    net_size_t packet_length = 0;
+    net_size_t count = 0;
+
+
+    packet_length = udp_available(sockid);
+    
+    if (packet_length < 0)
+        return packet_length;
+    if (read_offset >= packet_length)
+        return -1;
+
+    count = MIN(packet_length, bufsize);
+    count = socket_rx_read(sockid, sizeof(struct udp_w5100_header) + read_offset, count, data);
+    return count;
+}
+
+void udp_rx_flush(net_socket_t sockid)
+{
+    net_size_t packet_length = 0;
+    
+    packet_length = udp_available(sockid);
+
+    if (packet_length < 0)
+        return;
+
+    socket_rx_flush(sockid, sizeof(struct udp_w5100_header) + packet_length);
+}
 
 
 uint8_t udp_tx_prepare(net_socket_t sockid, const uint8_t *destip, uint16_t destport)

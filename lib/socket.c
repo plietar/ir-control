@@ -148,7 +148,9 @@ net_offset_t socket_tx_rd(net_socket_t sockid)
 
 net_size_t socket_rx_read(net_socket_t sockid, net_offset_t read_offset, net_size_t count, uint8_t *data)
 {
-    net_size_t available = socket_rx_rsr(sockid);
+    net_size_t available = socket_rx_rsr(sockid) - read_offset;
+    if (available < 0)
+        return -1;
     net_size_t length = MIN(available, count);
 
     net_offset_t offset = socket_rx_rd(sockid) + read_offset;
