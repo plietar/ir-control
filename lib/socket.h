@@ -49,17 +49,17 @@
 #define SOCKET_STATUS_ARP1 0x21
 #define SOCKET_STATUS_ARP2 0x31
 
-#define SOCKET_TX_BASE 0x4000U
-#define SOCKET_TX_SIZE 0x0800U
-#define SOCKET_TX_END 0x6000U
+#define SOCKET_TX_BASE ((net_addr_t) 0x4000)
+#define SOCKET_TX_SIZE ((net_addr_t) 0x0800)
+#define SOCKET_TX_END  ((net_addr_t) 0x6000)
 
 #define SOCKET_TX_BASE_S(sockid) (SOCKET_TX_BASE + SOCKET_TX_SIZE * sockid)
 #define SOCKET_TX_MASK_S(sockid) (SOCKET_TX_SIZE - 1)
 #define SOCKET_TX_END_S(sockid) (SOCKET_TX_BASE_S(sockid) + SOCKET_TX_MASK_S(sockid) + 1)
 
-#define SOCKET_RX_BASE 0x6000U
-#define SOCKET_RX_SIZE 0x0800U
-#define SOCKET_RX_END 0x8000U
+#define SOCKET_RX_BASE ((net_addr_t) 0x6000)
+#define SOCKET_RX_SIZE ((net_addr_t) 0x0800)
+#define SOCKET_RX_END  ((net_addr_t) 0x8000)
 
 #define SOCKET_RX_BASE_S(sockid) (SOCKET_RX_BASE + SOCKET_RX_SIZE * sockid)
 #define SOCKET_RX_MASK_S(sockid) (SOCKET_RX_SIZE - 1)
@@ -82,19 +82,19 @@ void socket_set_dest_ip(net_socket_t sockid, const uint8_t *destip);
 void socket_set_dest_port(net_socket_t sockid, uint16_t destport);
 
 uint8_t socket_tx_prepare(net_socket_t sockid);
-void socket_tx_write(net_socket_t sockid, uint16_t write_offset, uint16_t length, const uint8_t *data);
+void socket_tx_write(net_socket_t sockid, net_offset_t write_offset, net_size_t length, const uint8_t *data);
 void socket_tx_flush(net_socket_t sockid);
 
-uint16_t socket_tx_fsr(net_socket_t sockid);
-uint16_t socket_tx_rd(net_socket_t sockid);
-uint16_t socket_tx_wr(net_socket_t sockid);
-void socket_tx_set_wr(net_socket_t sockid, uint16_t wr);
+net_size_t socket_tx_fsr(net_socket_t sockid);
+net_offset_t socket_tx_rd(net_socket_t sockid);
+net_addr_t socket_tx_wr(net_socket_t sockid);
+void socket_tx_set_wr(net_socket_t sockid, net_offset_t wr);
 
-uint16_t socket_rx_read(net_socket_t sockid, uint16_t read_offset, uint16_t count, uint8_t *data);
-uint16_t socket_rx_flush(net_socket_t sockid, uint16_t count);
+net_size_t socket_rx_read(net_socket_t sockid, net_offset_t read_offset, net_size_t count, uint8_t *data);
+net_size_t socket_rx_flush(net_socket_t sockid, net_offset_t count);
 
-uint16_t socket_rx_rsr(net_socket_t sockid);
-uint16_t socket_rx_rd(net_socket_t sockid);
-void socket_rx_set_rd(net_socket_t sockid, uint16_t rd);
+net_size_t socket_rx_rsr(net_socket_t sockid);
+net_offset_t socket_rx_rd(net_socket_t sockid);
+void socket_rx_set_rd(net_socket_t sockid, net_offset_t rd);
 
 #endif

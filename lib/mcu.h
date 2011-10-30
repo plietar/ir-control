@@ -1,7 +1,6 @@
 #ifndef _mcu_h__
 #define _mcu_h__
 
-
 #define __MCU_AVR__	1
 #define __MCU_TYPE__	__MCU_AVR__
 

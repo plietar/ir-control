@@ -5,6 +5,7 @@
 
 typedef int16_t net_addr_t;
 typedef int16_t net_size_t;
+typedef int16_t net_offset_t;
 
 typedef uint8_t net_socket_t;
 

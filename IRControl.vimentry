@@ -1,0 +1,39 @@
+-- auto-gen settings (DO NOT MODIFY) --
+
+CWD=/home/paul/Programming/avr/IRControl
+Version=25
+VimEntryName=IRControl
+VimfilesDirName=.vimfiles.IRControl
+
+-- ex-plugins File Settings --
+
+LangType=auto
+Project=./.vimfiles.IRControl/project_tree.exproject
+FilenameList=./.vimfiles.IRControl/filenamelist
+Tag=./.vimfiles.IRControl/tags
+ID=./.vimfiles.IRControl/ID
+Symbol=./.vimfiles.IRControl/symbol
+Macro=./.vimfiles.IRControl/macro
+Cscope=./.vimfiles.IRControl/cscope.out
+Inherits=./.vimfiles.IRControl/inherits
+Bookmarks=./.vimfiles.IRControl/bookmarks
+
+vimentryRefs+=
+
+-- ex-plugins Behavior Settings --
+
+RestoreBuffers=true
+AskForRestoration=false
+RestoreInfo=./.vimfiles.IRControl/restore_info
+
+-- LookupFile Settings --
+
+LookupFileTag=./.vimfiles.IRControl/filenametags
+
+-- Visual Studio Settings --
+
+vsTaskList=./.vimfiles.IRControl/vs_task_list
+vsOutput=./.vimfiles.IRControl/vs_output
+vsFindResult1=./.vimfiles.IRControl/vs_find_results_1
+vsFindResult2=./.vimfiles.IRControl/vs_find_results_2
+

@@ -17,7 +17,7 @@ void w5100_init_no_spi()
     _delay_ms(10); // Let it breathe a little
     
     w5100_write(W5100_MR, 0); //Disable ping block, PPPoE and Indirect mode
-
+    
     // Set up buffers as 4 * 2KB.
     // Should be the default but just to make sure
     w5100_write(W5100_RMSR, 0x55);

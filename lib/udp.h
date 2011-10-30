@@ -28,12 +28,12 @@ void udp_close(net_socket_t sockid);
  *
  */
 uint8_t udp_tx_prepare(net_socket_t sockid, const uint8_t *destip, uint16_t destport);
-void udp_tx_write(net_socket_t sockid, uint16_t offset, uint16_t length, const uint8_t *data);
+void udp_tx_write(net_socket_t sockid, net_offset_t offset, net_size_t length, const uint8_t *data);
 void udp_tx_flush(net_socket_t sockid);
 
 // TODO: implement these functions
-uint16_t udp_rx_available(net_socket_t sockid);
-uint16_t udp_rx_read(int8_t sockid, uint16_t read_offset, uint16_t count, uint8_t *data);
+net_size_t udp_rx_available(net_socket_t sockid);
+net_size_t udp_rx_read(int8_t sockid, net_offset_t read_offset, net_size_t count, uint8_t *data);
 void udp_rx_flush(net_socket_t sockid);
 
 /*

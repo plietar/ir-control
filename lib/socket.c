@@ -86,19 +86,19 @@ uint8_t socket_tx_prepare(net_socket_t sockid)
     return 1;
 }
 
-void socket_tx_write(net_socket_t sockid, uint16_t write_offset, uint16_t length, const uint8_t *data)
+void socket_tx_write(net_socket_t sockid, net_offset_t write_offset, net_size_t length, const uint8_t *data)
 {
     while(length > socket_tx_fsr(sockid)) // Wait for free space
     {
     }
 
-    uint16_t offset = socket_tx_wr(sockid) + write_offset;
-    uint16_t start = SOCKET_TX_BASE_S(sockid)+ offset;
+    net_offset_t offset = socket_tx_wr(sockid) + write_offset;
+    net_addr_t start = SOCKET_TX_BASE_S(sockid)+ offset;
 
     if (start + length >= SOCKET_TX_END_S(sockid)) // If we need to split it up ..
     {
-        uint16_t first_size = SOCKET_TX_END_S(sockid) - start;
-        uint16_t second_size = length - first_size;
+        net_size_t first_size = SOCKET_TX_END_S(sockid) - start;
+        net_size_t second_size = length - first_size;
 
         w5100_write_array(start, first_size, data);
         w5100_write_array(SOCKET_TX_BASE_S(sockid), second_size, data + first_size);
@@ -125,39 +125,39 @@ void socket_tx_flush(net_socket_t sockid)
 }
 
 
-uint16_t socket_tx_fsr(net_socket_t sockid)
+net_size_t socket_tx_fsr(net_socket_t sockid)
 {
     return w5100_read16(W5100_SOCKET(sockid) + W5100_SOCK_TX_FSR);
 }
 
-uint16_t socket_tx_wr(net_socket_t sockid)
+net_offset_t socket_tx_wr(net_socket_t sockid)
 {
     return w5100_read16(W5100_SOCKET(sockid) + W5100_SOCK_TX_WR) & SOCKET_TX_MASK_S(sockid);
 }
 
-void socket_tx_set_wr(net_socket_t sockid, uint16_t wr)
+void socket_tx_set_wr(net_socket_t sockid, net_offset_t wr)
 {
     w5100_write16(W5100_SOCKET(sockid) + W5100_SOCK_TX_WR, wr);
 }
 
-uint16_t socket_tx_rd(net_socket_t sockid)
+net_offset_t socket_tx_rd(net_socket_t sockid)
 {
     return w5100_read16(W5100_SOCKET(sockid) + W5100_SOCK_TX_RD) & SOCKET_TX_MASK_S(sockid);
 }
 
 
-uint16_t socket_rx_read(net_socket_t sockid, uint16_t read_offset, uint16_t count, uint8_t *data)
+net_size_t socket_rx_read(net_socket_t sockid, net_offset_t read_offset, net_size_t count, uint8_t *data)
 {
-    uint16_t available = socket_rx_rsr(sockid);
-    uint16_t length = MIN(available, count);
+    net_size_t available = socket_rx_rsr(sockid);
+    net_size_t length = MIN(available, count);
 
-    uint16_t offset = socket_rx_rd(sockid) + read_offset;
-    uint16_t start = offset + SOCKET_RX_BASE_S(sockid); 
+    net_offset_t offset = socket_rx_rd(sockid) + read_offset;
+    net_addr_t start = SOCKET_RX_BASE_S(sockid) + offset;
 
     if (start + length >= SOCKET_RX_END_S(sockid)) // If we need to split it up ..
     {
-        uint16_t first_size = SOCKET_RX_END_S(sockid) - start;
-        uint16_t second_size = length - first_size;
+        net_size_t first_size = SOCKET_RX_END_S(sockid) - start;
+        net_size_t second_size = length - first_size;
 
         w5100_read_array(start, first_size, data);
         w5100_read_array(SOCKET_RX_BASE_S(sockid), second_size, data + first_size);
@@ -170,11 +170,11 @@ uint16_t socket_rx_read(net_socket_t sockid, uint16_t read_offset, uint16_t coun
     return length;
 }
 
-uint16_t socket_rx_flush(net_socket_t sockid, uint16_t count)
+net_size_t socket_rx_flush(net_socket_t sockid, net_size_t count)
 {
-    uint16_t available = socket_rx_rsr(sockid);
-    uint16_t length = MIN(available, count);
-    uint16_t offset = socket_rx_rd(sockid);
+    net_size_t available = socket_rx_rsr(sockid);
+    net_size_t length = MIN(available, count);
+    net_offset_t offset = socket_rx_rd(sockid);
 
     socket_rx_set_rd(sockid, offset + length);
     socket_cmd(sockid, SOCKET_CMD_RECV);
@@ -182,17 +182,17 @@ uint16_t socket_rx_flush(net_socket_t sockid, uint16_t count)
     return length;
 }
 
-uint16_t socket_rx_rsr(net_socket_t sockid)
+net_size_t socket_rx_rsr(net_socket_t sockid)
 {
     return w5100_read16(W5100_SOCKET(sockid) + W5100_SOCK_RX_RSR);
 }
 
-uint16_t socket_rx_rd(net_socket_t sockid)
+net_size_t socket_rx_rd(net_socket_t sockid)
 {
     return w5100_read16(W5100_SOCKET(sockid) + W5100_SOCK_RX_RD) & SOCKET_RX_MASK_S(sockid);
 }
 
-void socket_rx_set_rd(net_socket_t sockid, uint16_t rd)
+void socket_rx_set_rd(net_socket_t sockid, net_offset_t rd)
 {
     w5100_write16(W5100_SOCKET(sockid) + W5100_SOCK_RX_RD, rd);
 }
