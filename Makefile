@@ -31,7 +31,7 @@ AVRDUDE=avrdude
 
 cwarnings=-pedantic -Wall -Wextra -Wfloat-equal -Wwrite-strings -Wpointer-arith -Wcast-qual -Wcast-align  -Wshadow -Wredundant-decls -Wdouble-promotion -Winit-self -Wswitch-default -Wswitch-enum -Wundef -Wlogical-op -Winline
 # -Wconversion
-copti=-ffunction-sections -fdata-sections -O1
+copti=-ffunction-sections -fdata-sections -O3
 ldopti=-Wl,--gc-sections
 CFLAGS= $(CWARNINGS) -Werror -std=c99 -DF_CPU=$(CLOCK) -mmcu=$(DEVICE) $(addprefix -I,$(INCLUDE)) $(cwarnings) $(copti)
 AFLAGS=$(CFLAGS) -x assembler-with-cpp
