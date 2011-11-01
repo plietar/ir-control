@@ -2,6 +2,7 @@
 #include "socket.h"
 #include "util.h"
 #include "nettypes.h"
+#include <stdio.h>
 
 net_socket_t udp_open(uint16_t port)
 {
@@ -35,7 +36,7 @@ net_size_t udp_rx_available(net_socket_t sockid)
     {
         struct udp_w5100_header header;
         socket_rx_read(sockid, 0, sizeof(struct udp_w5100_header), (uint8_t*)&header); // Don't call flush. We only want the data length 
-        ret = header.length;
+        ret = util_ntohs(header.length);
     }
     else
         ret = -1;
@@ -75,10 +76,13 @@ void udp_rx_flush(net_socket_t sockid)
 {
     net_size_t packet_length = 0;
     
-    packet_length = udp_available(sockid);
+    packet_length = udp_rx_available(sockid);
 
     if (packet_length < 0)
+    {
+        printf("No data to flush\n\r");
         return;
+    }
 
     socket_rx_flush(sockid, sizeof(struct udp_w5100_header) + packet_length);
 }

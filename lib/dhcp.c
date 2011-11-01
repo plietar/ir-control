@@ -5,14 +5,15 @@
 #include "util.h"
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
+#include <avr/pgmspace.h>
 
 static uint8_t broadcast[] = {255, 255, 255, 255};
+static struct dhcp_packet gPacket;
 
 uint8_t dhcp_get_ip()
 {
-    static struct dhcp_packet packet;
     static uint8_t server[4];
-
     uint8_t sockid = SOCKET_INVALID;
     uint32_t xid = DHCP_XID; // XID should be the same during the hole transmission
 
@@ -21,27 +22,31 @@ uint8_t dhcp_get_ip()
     if (sockid == SOCKET_INVALID)
         return 0;
 
-    dhcp_send_discover(sockid, &packet, xid);
+    dhcp_send_discover(sockid, &gPacket, xid);
 
     while(1)
     {
         if (udp_available(sockid) > 0 )
         {
-            udp_recv(sockid, sizeof(packet), (uint8_t *)&packet);
-            if (dhcp_parse_offer(&packet, xid, server))
+            udp_recv(sockid, sizeof(gPacket), (uint8_t *)&gPacket);
+            if (dhcp_parse_offer(&gPacket, xid, server))
                 break;
+            else
+                printf_P(PSTR("Bad offer\n\r"));
         }
     }
 
-    dhcp_send_request(sockid, &packet, server, xid);
+    dhcp_send_request(sockid, &gPacket, server, xid);
 
     while(1)
     {
         if (udp_available(sockid) > 0 )
         {
-            udp_recv(sockid, sizeof(packet), (uint8_t *)&packet);
-            if (dhcp_parse_ack(&packet, xid))
+            udp_recv(sockid, sizeof(gPacket), (uint8_t *)&gPacket);
+            if (dhcp_parse_ack(&gPacket, xid))
                 break;
+            else
+                printf_P(PSTR("Bad ack"));
         }
     }
 

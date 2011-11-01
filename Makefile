@@ -11,10 +11,11 @@
 
 DEVICE     = atmega328p
 CLOCK      = 16000000
-PROGRAMMER = -c stk500v1 -b57600 -P/dev/ttyUSB0
+PORT 	   = /dev/ttyUSB0
+PROGRAMMER = -c stk500v1 -b57600 -P$(PORT)
 FUSES      = -U hfuse:w:0xd9:m -U lfuse:w:0x24:m
-SRCS       = main.c lib/spi.c lib/w5100.c lib/uart.c lib/socket.c lib/udp.c lib/dhcp.c lib/util.c lib/timer.c
-HDRS       = lib/spi.h lib/w5100.h lib/uart.h lib/socket.h lib/udp.h lib/dhcp.h lib/util.h lib/timer.h
+SRCS       = main.c lib/spi.c lib/w5100.c lib/uart.c lib/socket.c lib/udp.c lib/dhcp.c lib/util.c lib/timer.c lib/ir.c
+HDRS       = lib/spi.h lib/w5100.h lib/uart.h lib/socket.h lib/udp.h lib/dhcp.h lib/util.h lib/timer.h lib/ir.h
 
 MAIN=main
 OBJDIR=obj
@@ -31,7 +32,7 @@ AVRDUDE=avrdude
 
 cwarnings=-pedantic -Wall -Wextra -Wfloat-equal -Wwrite-strings -Wpointer-arith -Wcast-qual -Wcast-align  -Wshadow -Wredundant-decls -Wdouble-promotion -Winit-self -Wswitch-default -Wswitch-enum -Wundef -Wlogical-op -Winline
 # -Wconversion
-copti=-ffunction-sections -fdata-sections -O1
+copti=-ffunction-sections -fdata-sections -O3
 ldopti=-Wl,--gc-sections
 CFLAGS= $(CWARNINGS) -Werror -std=c99 -DF_CPU=$(CLOCK) -mmcu=$(DEVICE) $(addprefix -I,$(INCLUDE)) $(cwarnings) $(copti)
 AFLAGS=$(CFLAGS) -x assembler-with-cpp
