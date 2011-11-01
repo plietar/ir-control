@@ -36,11 +36,4 @@ void udp_rx_header(net_socket_t sockid, struct udp_w5100_header *out);
 net_size_t udp_rx_read(int8_t sockid, net_offset_t read_offset, net_size_t count, uint8_t *data);
 void udp_rx_flush(net_socket_t sockid);
 
-/*
- * These are the compatiblity functions. They will be deprecated and shouldn't be used.
- */
-// Sends a whole packet
-void udp_send(net_socket_t sockid, const uint8_t *destip, uint16_t destport, uint16_t length, const uint8_t *data);
-int16_t udp_available(net_socket_t sockid);
-uint16_t udp_recv(net_socket_t sockid, uint16_t max, uint8_t *data);
 #endif

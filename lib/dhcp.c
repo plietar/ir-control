@@ -3,199 +3,190 @@
 #include "socket.h"
 #include "udp.h"
 #include "util.h"
+#include "timer.h"
 #include <stdlib.h>
 #include <string.h>
-
-static uint8_t broadcast[] = {255, 255, 255, 255};
+#include <stdio.h>
+static const uint8_t dhcp_broadcast[] = {255, 255, 255, 255};
+static uint8_t dhcp_server[] = {0, 0, 0, 0};
+static uint32_t dhcp_xid = 0;
+static uint16_t dhcp_start_time = 0;
 
 uint8_t dhcp_get_ip()
 {
-    static struct dhcp_packet packet;
-    static uint8_t server[4];
 
     uint8_t sockid = SOCKET_INVALID;
-    uint32_t xid = DHCP_XID; // XID should be the same during the hole transmission
 
     // First get a socket
     sockid = udp_open(DHCP_CLIENT_PORT);
     if (sockid == SOCKET_INVALID)
-        return 0;
-
-    dhcp_send_discover(sockid, &packet, xid);
-
-    while(1)
-    {
-        if (udp_available(sockid) > 0 )
-        {
-            udp_recv(sockid, sizeof(packet), (uint8_t *)&packet);
-            if (dhcp_parse_offer(&packet, xid, server))
-                break;
-        }
-    }
-
-    dhcp_send_request(sockid, &packet, server, xid);
-
-    while(1)
-    {
-        if (udp_available(sockid) > 0 )
-        {
-            udp_recv(sockid, sizeof(packet), (uint8_t *)&packet);
-            if (dhcp_parse_ack(&packet, xid))
-                break;
-        }
-    }
-
+        return 1;
+    dhcp_send_packet(sockid, DHCP_DISCOVER);
+    if (dhcp_read_packet(sockid) != DHCP_OFFER)
+        return 2;
+    dhcp_send_packet(sockid, DHCP_REQUEST);
+    if (dhcp_read_packet(sockid) != DHCP_ACK)
+        return 3;
+    
     // Finally close the socket
     udp_close(sockid);
-    return 1;
-}
-
-void dhcp_build_packet(struct dhcp_packet *packet, uint32_t xid)
-{
-    memset(packet, 0, sizeof(struct dhcp_packet));
-
-    packet->op = DHCP_OP_REQUEST;
-    packet->htype = DHCP_HTYPE_ETHERNET;
-    packet->hlen = DHCP_HLEN_ETHERNET;
-    packet->hops = 0;
-    packet->xid = util_htonl(xid);
-    packet->secs = util_htons(DHCP_SECS);
-    packet->flags = util_htons(0);//DHCP_FLAGS_BROADCAST); // For debug, else use 0
-    // All ip address fields have been reset by memset
-    w5100_get_hwaddr(packet->chaddr);
-    // sname and file have been reset too
-    packet->magic = DHCP_MAGIC;
-}
-
-void dhcp_send_discover(uint8_t sockid, struct dhcp_packet *packet, uint32_t xid)
-{
-    uint8_t *option_ptr = 0;
-    // Setup the packet
-    dhcp_build_packet(packet, xid);
-    option_ptr = packet->options;
-    option_ptr = dhcp_option_cmdtype(option_ptr, DHCP_OPTION_MSGTYPE_DISCOVER);
-    option_ptr = dhcp_option_maxlength(option_ptr, sizeof(struct dhcp_packet));
-    option_ptr = dhcp_option_end(option_ptr);
-
-    udp_send(sockid, broadcast, DHCP_SERVER_PORT, sizeof(struct dhcp_packet), (uint8_t *)packet);
-}
-
-void dhcp_send_request(uint8_t sockid, struct dhcp_packet *packet, const uint8_t *server, uint32_t xid)
-{
-    uint8_t *option_ptr = 0;
-    // Setup the packet
-    dhcp_build_packet(packet, xid);
-    option_ptr = packet->options;
-    option_ptr = dhcp_option_cmdtype(option_ptr, DHCP_OPTION_MSGTYPE_REQUEST);
-    option_ptr = dhcp_option_maxlength(option_ptr, sizeof(struct dhcp_packet));
-    option_ptr = dhcp_option_requested_ipaddr(option_ptr);
-    option_ptr = dhcp_option_server_id(option_ptr, server);
-    option_ptr = dhcp_option_end(option_ptr);
-
-    udp_send(sockid, broadcast, DHCP_SERVER_PORT, sizeof(struct dhcp_packet), (uint8_t *)packet);
-}
-
-uint8_t dhcp_packet_type(const struct dhcp_packet *packet)
-{
-    for (const uint8_t *option_ptr = packet->options; option_ptr[0] != DHCP_OPTION_END; option_ptr += option_ptr[1] + 2)
-    {
-        switch (option_ptr[0])
-        {
-            case DHCP_OPTION_MSGTYPE:
-                return option_ptr[2];
-                break;
-            default:
-                break;
-        }
-    }
     return 0;
 }
 
-uint8_t dhcp_parse_offer(const struct dhcp_packet *packet, uint32_t xid, uint8_t *server)
+
+void dhcp_send_packet(uint8_t sockid, uint8_t msgtype)
 {
-    if (packet->op != DHCP_OP_REPLY
-            || util_ntohl(packet->xid) != xid
-            || packet->magic != DHCP_MAGIC
-            || dhcp_packet_type(packet) != DHCP_OPTION_MSGTYPE_OFFER)
-        return 0;
+    udp_tx_prepare(sockid, dhcp_broadcast, DHCP_SERVER_PORT);
 
-    memset(server, 0, 4);
-    w5100_set_ipaddr(packet->yiaddr);
+#if DHCP_USE_MALLOC
+    uint8_t *buffer = malloc(32);
+#else
+    uint8_t buffer[32];
+#endif
+    net_offset_t offset = 0;
 
-    for (const uint8_t *option_ptr = packet->options; option_ptr[0] != DHCP_OPTION_END; option_ptr += option_ptr[1] + 2)
+    memset(buffer, 0, 32);
+
+    buffer[0] = DHCP_OP_REQUEST;
+    buffer[1] = DHCP_HTYPE_ETHERNET;
+    buffer[2] = DHCP_HLEN_ETHERNET;
+    buffer[3] = 0;
+    uint32_t xid = util_htonl(dhcp_xid);
+    memcpy(buffer + 4, &xid, 4);
+    uint16_t secs = util_htons(timer_secs() - dhcp_start_time);
+    memcpy(buffer + 8, &secs, 2);
+    uint16_t flags = util_htons(DHCP_FLAGS_BROADCAST);
+    memcpy(buffer + 10, &flags, 2);
+
+    // All ip addresses fields have been reset by memset
+    udp_tx_write(sockid, offset, 28, buffer);
+    offset += 28; // We have written 28 bytes so far
+
+    w5100_get_hwaddr(buffer);
+    udp_tx_write(sockid, offset, 16, buffer); // Even though the mac address is 4bytes, the chaddr field is 16
+    offset += 16;
+
+    // Now clear th sname and file fields. They are 192 bytes in total
+    // This is 6*32 bytes so send 6 empty buffers
+    memset(buffer, 0, 32);
+    for (int i = 0; i < 6; i++)
     {
-        switch (option_ptr[0])
+        udp_tx_write(sockid, offset, 32, buffer);
+        offset += 32;
+    }
+
+    uint32_t magic = util_htonl(DHCP_MAGIC);
+    memcpy(buffer, &magic, 4);
+    buffer[4] = DHCP_MSGTYPE;
+    buffer[5] = 1;
+    buffer[6] = msgtype;
+
+    udp_tx_write(sockid, offset, 7, buffer);
+    offset += 7;
+
+    switch (msgtype)
+    {
+    case DHCP_REQUEST:
+        buffer[0] = DHCP_REQ_IPADDR;
+        buffer[1] = 4;
+        w5100_get_ipaddr(buffer + 2);
+
+        buffer[6] = DHCP_SERVER_ID;
+        buffer[7] = 4;
+        memcpy(buffer + 8, dhcp_server, 4);
+
+        udp_tx_write(sockid, offset, 12, buffer);
+        offset += 12;
+
+        break;
+    default:
+        break;
+    }
+
+    buffer[0] = DHCP_END;
+    udp_tx_write(sockid, offset, 1, buffer);
+    offset += 1;
+
+#if DHCP_USE_MALLOC
+    free(buffer);
+#endif
+
+    printf("Sending DHCP packet ..\n\r");
+    udp_tx_flush(sockid);
+}
+
+uint8_t dhcp_read_packet(uint8_t sockid)
+{
+//    uint16_t start_time = 0;
+    uint8_t type = 0;
+
+    net_size_t data_len = -1;
+    do {
+        if (data_len >= 0) // That means the packet was rejected by the while
         {
-            case DHCP_OPTION_ROUTER:
-                w5100_set_gateway(option_ptr + 2);
+            udp_tx_flush(sockid);
+        }
+        data_len = udp_rx_available(sockid);
+    } while (data_len < DHCP_OPTIONS_OFFSET); // Minimum dhcp message
+    
+#if DHCP_USE_MALLOC
+    struct dhcp_header *header = malloc(sizeof(struct dhcp_header));
+#else
+    struct dhcp_header _header;
+    struct dhcp_header *header = &_header;
+#endif
+
+    udp_rx_read(sockid, 0, sizeof(struct dhcp_header), (uint8_t *)header);
+
+    uint8_t hwaddr[6];
+    w5100_get_hwaddr(hwaddr);
+
+    if (header->op == DHCP_OP_REPLY 
+        && util_ntohl(header->xid) == dhcp_xid
+        && memcmp(header->chaddr,hwaddr, 6) == 0)
+    {
+        type = 0xff;
+        w5100_set_ipaddr(header->yiaddr);
+        net_size_t option_len = data_len - DHCP_OPTIONS_OFFSET;
+        uint8_t *buffer = malloc(option_len);
+        udp_rx_read(sockid, DHCP_OPTIONS_OFFSET, option_len, buffer);
+
+        uint8_t *p = buffer;
+        uint8_t *e = p + option_len;
+
+        
+        while (p < e)
+        {
+            switch (p[0])
+            {
+            case DHCP_END:
+                p = e; // End the loop
                 break;
-            case DHCP_OPTION_SUBNET:
-                w5100_set_subnet(option_ptr + 2);
+            case DHCP_MSGTYPE:
+                type = p[2];
                 break;
-            case DHCP_OPTION_SERVER_ID:
-                memcpy(server, option_ptr + 2, 4);
+            case DHCP_SUBNET:
+                w5100_set_subnet(p + 2);
+                break;
+            case DHCP_ROUTER:
+                w5100_set_gateway(p + 2);
+                break;
+            case DHCP_SERVER_ID:
+                memcpy(dhcp_server, p + 2, 4);
                 break;
             default:
-                break;
+               break;
+            }
+            
+            if (p[0] != DHCP_END) // The end do not have a length option
+                p += p[1] + 2;
         }
+
+        free(buffer);
     }
-    return 1;
+#if DHCP_USE_MALLOC
+    free(header);
+#endif
+    udp_rx_flush(sockid);
+    return type;
 }
-
-uint8_t dhcp_parse_ack(const struct dhcp_packet *packet, uint32_t xid)
-{
-    if (packet->op != DHCP_OP_REPLY
-            || util_ntohl(packet->xid) != xid
-            || packet->magic != DHCP_MAGIC
-            || dhcp_packet_type(packet) != DHCP_OPTION_MSGTYPE_ACK)
-        return 0;
-    return 1;
-}
-
-uint8_t *dhcp_option_cmdtype(uint8_t *option_ptr, uint8_t type)
-{
-    option_ptr[0] = DHCP_OPTION_MSGTYPE;
-    option_ptr[1] = DHCP_OPTION_MSGTYPE_SIZE;
-    option_ptr[2] = type;
-    option_ptr += DHCP_OPTION_MSGTYPE_SIZE + 2;
-    return option_ptr;
-}
-
-uint8_t *dhcp_option_maxlength(uint8_t *option_ptr, uint16_t maxlength)
-{
-    option_ptr[0] = DHCP_OPTION_MAXLENGTH;
-    option_ptr[1] = DHCP_OPTION_MAXLENGTH_SIZE;
-    option_ptr[2] = (maxlength & 0xFF00) >> 8;
-    option_ptr[3] = (maxlength & 0x00FF) >> 0;
-
-    option_ptr += DHCP_OPTION_MAXLENGTH_SIZE + 2;
-    return option_ptr; 
-}
-
-uint8_t *dhcp_option_requested_ipaddr(uint8_t *option_ptr)
-{
-    option_ptr[0] = DHCP_OPTION_REQ_IPADDR;
-    option_ptr[1] = DHCP_OPTION_REQ_IPADDR_SIZE;
-    w5100_get_ipaddr(option_ptr + 2);
-
-    option_ptr += DHCP_OPTION_REQ_IPADDR_SIZE + 2;
-    return option_ptr;
-}
-
-uint8_t *dhcp_option_server_id(uint8_t *option_ptr, const uint8_t *server)
-{
-    option_ptr[0] = DHCP_OPTION_SERVER_ID;
-    option_ptr[1] = DHCP_OPTION_SERVER_ID_SIZE;
-    memcpy(option_ptr + 2, server, 4);
-
-    option_ptr += DHCP_OPTION_REQ_IPADDR_SIZE + 2;
-    return option_ptr;
-}
-
-uint8_t *dhcp_option_end(uint8_t *option_ptr)
-{
-    option_ptr[0] = DHCP_OPTION_END;
-    return option_ptr;
-}
-
-

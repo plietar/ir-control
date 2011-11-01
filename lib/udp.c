@@ -26,8 +26,6 @@ void udp_close(net_socket_t sockid)
 }
 
 
-// TODO: implement these functions
-
 net_size_t udp_rx_available(net_socket_t sockid)
 {
     net_size_t ret = socket_rx_rsr(sockid);
@@ -35,7 +33,7 @@ net_size_t udp_rx_available(net_socket_t sockid)
     {
         struct udp_w5100_header header;
         socket_rx_read(sockid, 0, sizeof(struct udp_w5100_header), (uint8_t*)&header); // Don't call flush. We only want the data length 
-        ret = header.length;
+        ret = util_ntohs(header.length);
     }
     else
         ret = -1;
@@ -59,7 +57,7 @@ net_size_t udp_rx_read(int8_t sockid, net_offset_t read_offset, net_size_t bufsi
     net_size_t count = 0;
 
 
-    packet_length = udp_available(sockid);
+    packet_length = udp_rx_available(sockid);
     
     if (packet_length < 0)
         return packet_length;
@@ -75,7 +73,7 @@ void udp_rx_flush(net_socket_t sockid)
 {
     net_size_t packet_length = 0;
     
-    packet_length = udp_available(sockid);
+    packet_length = udp_rx_available(sockid);
 
     if (packet_length < 0)
         return;
@@ -104,46 +102,5 @@ void udp_tx_write(net_socket_t sockid, net_offset_t offset, net_size_t length, c
 void udp_tx_flush(net_socket_t sockid)
 {
     socket_tx_flush(sockid);
-}
-
-void udp_send(net_socket_t sockid, const uint8_t *destip, uint16_t destport, uint16_t length, const uint8_t *data)
-{
-    if (!udp_tx_prepare(sockid, destip, destport))
-        return;
-
-    udp_tx_write(sockid, 0, length, data);
-    udp_tx_flush(sockid);
-}
-
-int16_t udp_available(net_socket_t sockid)
-{
-    uint16_t ret = socket_rx_rsr(sockid);
-    if (ret >= sizeof(struct udp_w5100_header)) // If a packet is available, read its size.
-    {
-        struct udp_w5100_header header;
-        socket_rx_read(sockid, 0, sizeof(struct udp_w5100_header), (uint8_t*)&header); // Don't call flush. We only want the data length 
-        ret = header.length;
-    }
-    else
-        ret = 0;
-    return ret;
-}
-
-uint16_t udp_recv(net_socket_t sockid, uint16_t bufsize, uint8_t *data)
-{
-    uint16_t packet_length = 0;
-    uint16_t get = 0;
-    uint16_t count = 0;
-
-
-    packet_length = udp_available(sockid);
-    
-    if (!packet_length)
-        return packet_length;
-
-    get = MIN(packet_length, bufsize);
-    count = socket_rx_read(sockid, sizeof(struct udp_w5100_header), get, data);
-    socket_rx_flush(sockid, sizeof(struct udp_w5100_header) + packet_length); // Flush both the header and the packet
-    return count;
 }
 
