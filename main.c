@@ -46,7 +46,7 @@ int main(void)
     w5100_set_subnet(subnet);
     w5100_set_gateway(gw);
 
-    _delay_ms(100);
+    _delay_ms(5000);
     printf_P(PSTR("Ready ..\n\r"));
     
     uint8_t ret = 0;
@@ -54,13 +54,13 @@ int main(void)
     {
         ret = dhcp_get_ip();
 
-        if(!ret)
+        if(ret != 0)
         {
-            printf("DHCP failed! Retrying ..\n\r");
+            printf("DHCP failed! Ret: %d\n\r", ret);
             _delay_ms(1000);
         }
     }
-    while(!ret);
+    while(ret != 0);
 
     w5100_get_ipaddr(ip);
     w5100_get_gateway(gw);

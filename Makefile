@@ -11,7 +11,8 @@
 
 DEVICE     = atmega328p
 CLOCK      = 16000000
-PROGRAMMER = -c stk500v1 -b57600 -P/dev/ttyUSB0
+PORT 	   = /dev/ttyUSB0
+PROGRAMMER = -c stk500v1 -b57600 -P$(PORT)
 FUSES      = -U hfuse:w:0xd9:m -U lfuse:w:0x24:m
 SRCS       = main.c lib/spi.c lib/w5100.c lib/uart.c lib/socket.c lib/udp.c lib/dhcp.c lib/util.c lib/timer.c
 HDRS       = lib/spi.h lib/w5100.h lib/uart.h lib/socket.h lib/udp.h lib/dhcp.h lib/util.h lib/timer.h
