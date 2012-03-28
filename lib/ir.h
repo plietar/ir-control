@@ -31,5 +31,6 @@ void ir_on();
 void ir_off();
 void ir_toggle();
 void ir_start(uint16_t *pronto);
+void ir_stop();
 
 #endif

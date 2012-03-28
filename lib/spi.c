@@ -38,7 +38,6 @@ void spi_init(uint8_t mode, int dord, int interrupt, uint8_t clock)
     DDRB |= (1<<SPI_MOSI_PIN); // output
     DDRB &= ~(1<<SPI_MISO_PIN); // input
     DDRB |= (1<<SPI_SCK_PIN);// output
-    DDRB |= (1<<SPI_SS_PIN);// output
   }
   SPCR = ((interrupt ? 1 : 0)<<SPIE) // interrupt enabled
     | (1<<SPE) // enable SPI

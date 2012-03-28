@@ -1,5 +1,7 @@
 #include "ir.h"
 #include <avr/interrupt.h>
+#include <stdio.h>
+#include <avr/pgmspace.h>
 
 static const uint16_t *ir_code;
 static uint16_t ir_cycle_count;
@@ -42,6 +44,8 @@ void ir_start(uint16_t *code)
     IR_TCCRnB = 0x00;
 
     uint16_t top = ( (F_CPU/1000000.0) * code[PRONTO_FREQ_CODE] * 0.241246 ) - 1;
+    
+    printf_P(PSTR("freq: %d\n\r"),code[PRONTO_FREQ_CODE] * 0.241246);
     IR_ICRn = top;
     IR_OCRn = top >> 1;
 
@@ -88,3 +92,10 @@ ISR(TIMER1_OVF_vect) {
         }
     }
 }
+
+void ir_stop()
+{
+    IR_TCCRnA = 0x00; // Reset the pwm
+    IR_TCCRnB = 0x00;
+}
+
