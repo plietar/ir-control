@@ -3,12 +3,12 @@
 #include <stdio.h>
 #include <avr/pgmspace.h>
 
-static const uint16_t *ir_code;
-static uint16_t ir_cycle_count;
-static uint16_t ir_total_cycle_count;
-static uint8_t ir_seq_index;
+static const uint16_t *ir_code = NULL;
+static uint16_t ir_cycle_count = 0;
+static uint32_t ir_total_cycle_count = 0;
+static uint8_t ir_seq_index = 0;
 
-static uint8_t ir_led_state;
+static uint8_t ir_led_state = 0;
 
 void ir_init()
 {
@@ -16,13 +16,15 @@ void ir_init()
 
 void ir_on()
 {
-    IR_TCCRnA |= (1<<IR_COMn0) | (1<<IR_COMn1);
+    IR_TCCRnA |= (1<<IR_COMn1) + (1<<IR_COMn0);
     ir_led_state = 1;
 }
 
 void ir_off()
 {
-    IR_TCCRnA &= ~((1<<IR_COMn0) | (1<<IR_COMn1));
+//    IR_TCCRnA &= ~((1<<IR_COMn0) | (1<<IR_COMn1));
+    IR_TCCRnA &=  ((~(1<<IR_COMn1)) & (~(1<<IR_COMn0)) );
+
     ir_led_state = 0;
 }
 
@@ -36,6 +38,7 @@ void ir_toggle()
 
 void ir_start(uint16_t *code)
 {
+    //printf("%0hX %0hX", IR_TCCRnA, IR_TCCRnB);
     ir_code = code;
     IR_PORT &= ~IR_BV; // Turn output off
     IR_DDR |= IR_BV; // Set it as output
@@ -43,24 +46,31 @@ void ir_start(uint16_t *code)
     IR_TCCRnA = 0x00; // Reset the pwm
     IR_TCCRnB = 0x00;
 
+    printf_P(PSTR("FREQ CODE: %hd\r\n"),  code[PRONTO_FREQ_CODE]);
+
     uint16_t top = ( (F_CPU/1000000.0) * code[PRONTO_FREQ_CODE] * 0.241246 ) - 1;
     
-    printf_P(PSTR("freq: %d\n\r"),code[PRONTO_FREQ_CODE] * 0.241246);
+    printf_P(PSTR("top: %hu\n\r"), top);
     IR_ICRn = top;
     IR_OCRn = top >> 1;
 
     IR_TCCRnA = (1<<WGM11);
     IR_TCCRnB = (1<<WGM13) | (1<<WGM12);
 
-    IR_TCNTn = 0x00;
+    IR_TCNTn = 0x0000;
     IR_TIFRn = 0x00;
 
     IR_TIMSKn = 1 << IR_TOIEn;
+
+    ir_seq_index = PRONTO_CODE_START;
+    ir_cycle_count = 0;
 
     ir_on();
     IR_TCCRnB |= (1<<CS10);
 }
 
+#define TOTAL_CYCLES 400000             // Turns off after this number of 
+                                        // cycles. About 10 seconds
 ISR(TIMER1_OVF_vect) {
     uint16_t sequenceIndexEnd;          // Index to the last element in the 
                                         // ProntoCode array
@@ -85,10 +95,13 @@ ISR(TIMER1_OVF_vect) {
         if (ir_seq_index >= sequenceIndexEnd ) {        
             ir_seq_index = repeatSequenceIndexStart;     
 
-/*            if(ir_total_cycle_count>TOTAL_CYCLES) {            // Finished
+            if(ir_total_cycle_count>TOTAL_CYCLES) {            // Finished
+                ir_off();
                 TCCR1B &= ~(1<<CS10);                    // Stop Timer
+                /*
                 IRLED_Power(false);                        // Turn off LED
-            }*/
+                */
+            }
         }
     }
 }

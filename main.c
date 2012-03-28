@@ -46,7 +46,7 @@ int main(void)
 
     net_socket_t sockid = SOCKET_INVALID;
     uint16_t port = 5000;
-
+//7BED409
     w5100_init();
     printf_P(PSTR("W5100 Init done ..\n\r"));
     
@@ -86,7 +86,7 @@ int main(void)
         net_size_t available = -1;
         if ((available = udp_rx_available(sockid)) > 0)
         {
-            ir_stop();
+            //ir_stop();
             free(buffer); // Free the previous buffer. TODO stop the ir before.
             buffer = malloc(available);
             if (buffer)
