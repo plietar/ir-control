@@ -45,6 +45,8 @@ LICENSE:
  *  @author Peter Fleury pfleury@gmx.ch  http://jump.to/fleury
  */
  
+#include <avr/io.h>
+
 /**@{*/
 
 
