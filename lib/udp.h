@@ -23,7 +23,7 @@ void udp_close(net_socket_t sockid);
  * This way, you may use buffers smaller than packets
  *
  * First call udp_tx_prepare to setup the packet with destination ip and port
- * then call udp_tx_add as many times as you want to add data
+ * then call udp_tx_write as many times as you want to add data
  * finally call udp_tx_flush to send the packet.
  *
  */

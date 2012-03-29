@@ -70,9 +70,12 @@ void socket_set_type(net_socket_t sockid, uint8_t type);
 
 net_socket_t socket_alloc(uint8_t type);
 void socket_free(net_socket_t sockid);
+void socket_close(net_socket_t sockid);
+void socket_disconnect(net_socket_t sockid);
 
 void socket_cmd(net_socket_t sockid, uint8_t cmd);
 uint8_t socket_status(net_socket_t sockid);
+uint16_t socket_port(net_socket_t sockid);
 
 uint8_t socket_ir(net_socket_t sockid);
 void socket_ir_clear(net_socket_t sockid, uint8_t ir);
@@ -82,19 +85,19 @@ void socket_set_dest_ip(net_socket_t sockid, const uint8_t *destip);
 void socket_set_dest_port(net_socket_t sockid, uint16_t destport);
 
 uint8_t socket_tx_prepare(net_socket_t sockid);
-void socket_tx_write(net_socket_t sockid, net_offset_t write_offset, net_size_t length, const uint8_t *data);
+net_offset_t socket_tx_write(net_socket_t sockid, net_offset_t write_offset, net_size_t length, const uint8_t *data);
 void socket_tx_flush(net_socket_t sockid);
 
 net_size_t socket_tx_fsr(net_socket_t sockid);
 net_offset_t socket_tx_rd(net_socket_t sockid);
 net_addr_t socket_tx_wr(net_socket_t sockid);
-void socket_tx_set_wr(net_socket_t sockid, net_offset_t wr);
+void socket_tx_inc_wr(net_socket_t sockid, net_size_t inc);
 
 net_size_t socket_rx_read(net_socket_t sockid, net_offset_t read_offset, net_size_t count, uint8_t *data);
-net_size_t socket_rx_flush(net_socket_t sockid, net_offset_t count);
+net_size_t socket_rx_flush(net_socket_t sockid, net_size_t count);
 
 net_size_t socket_rx_rsr(net_socket_t sockid);
 net_offset_t socket_rx_rd(net_socket_t sockid);
-void socket_rx_set_rd(net_socket_t sockid, net_offset_t rd);
+void socket_rx_inc_rd(net_socket_t sockid, net_size_t inc);
 
 #endif

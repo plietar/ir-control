@@ -14,8 +14,8 @@ CLOCK      = 16000000
 PORT 	   = /dev/ttyUSB0
 PROGRAMMER = -c stk500v1 -b57600 -P$(PORT)
 FUSES      = -U hfuse:w:0xd9:m -U lfuse:w:0x24:m
-SRCS       = main.c lib/crc.c lib/spi.c lib/w5100.c lib/uart.c lib/socket.c lib/udp.c lib/dhcp.c lib/util.c lib/timer.c lib/ir.c
-HDRS       = lib/crc.h lib/spi.h lib/w5100.h lib/uart.h lib/socket.h lib/udp.h lib/dhcp.h lib/util.h lib/timer.h lib/ir.h
+SRCS       = main.c lib/crc.c lib/spi.c lib/w5100.c lib/uart.c lib/socket.c lib/udp.c lib/dhcp.c lib/util.c lib/timer.c lib/ir.c lib/tcp.c
+HDRS       = lib/crc.h lib/spi.h lib/w5100.h lib/uart.h lib/socket.h lib/udp.h lib/dhcp.h lib/util.h lib/timer.h lib/ir.h lib/tcp.h
 
 MAIN=main
 OBJDIR=obj

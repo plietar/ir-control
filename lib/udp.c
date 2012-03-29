@@ -23,7 +23,7 @@ uint8_t udp_ready(net_socket_t sockid)
 
 void udp_close(net_socket_t sockid)
 {
-    socket_free(sockid);
+    socket_close(sockid);
 }
 
 
